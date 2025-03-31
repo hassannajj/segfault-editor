@@ -5,6 +5,9 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "safe_memory.h"
+
+
 // *************************************************************************************************************************
 
 /* Unsure of how to use this, but might use it later
@@ -20,17 +23,14 @@ size_t num_lines = 0;
 
 
 char ** realloc_more_lines(char ** content) {
-  char** new_content = (char **)realloc(content, max_lines * sizeof(char *));
-  if (!new_content) {
-    fprintf(stderr, "Memory reallocation failed\n");
-    exit(1);
-  }
+  char** new_content = (char **)safe_realloc(content, max_lines * sizeof(char *));
   return new_content;
 }
 
 void free_lines(char ** content) {
   for (size_t i = 0; i < num_lines; i++) {
     free(content[i]);
+    content[i] = NULL;
   }
 }
 
@@ -50,7 +50,7 @@ void populate_content_from_file(FILE *file, char *** content_ptr) {
       content = *content_ptr; // Update local pointer
     }
 
-    content[num_lines] = (char * ) malloc((read + 1) * sizeof(char)); /* Allocates enough memory + 1 for null term */ 
+    content[num_lines] = (char * ) safe_malloc((read + 1) * sizeof(char)); /* Allocates enough memory + 1 for null term */ 
     strcpy(content[num_lines], line); /* Copies line from file into content */
     num_lines ++;
 
@@ -79,14 +79,26 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  char ** content;
-  content = malloc(max_lines * sizeof(char *)); // allocates space for a bunch of strings
-  populate_content_from_file(file, &content); // Pass reference to pointer
+  /* Allocate space for storing lines */
+  char ** content = safe_malloc(max_lines * sizeof(char *)); // allocates space for a bunch of strings 
+  if (!content) {
+      fprintf(stderr, "Memory allocation failed\n");
+      fclose(file);
+      return 1;
+  }
 
+  /* Read file content */
+  populate_content_from_file(file, &content); // Pass reference to pointer
+  fclose(file); // Close file
+
+
+
+
+  /* Display Content */
   read_content(content);
 
 
-  // End of program, free / reset everything
+  /* Cleanup */
   free_lines(content); 
   free(content);
   num_lines = 0;
@@ -94,7 +106,6 @@ int main(int argc, char *argv[]) {
 
   //while (1) { // Try to put some sort of input
   //}
-  fclose(file); /* Close file */
   return 0;        
 
 }
