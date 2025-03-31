@@ -17,42 +17,41 @@ struct textEditor {
 */
 
 
- /* Modifiable global variables */
-size_t max_lines = 256;
-size_t num_lines = 0;
-
-
-char ** realloc_more_lines(char ** content) {
-  char** new_content = (char **)safe_realloc(content, max_lines * sizeof(char *));
+char ** realloc_more_lines(char **content, size_t *max_lines) {
+  printf("Reallocating content to fit %ld lines\n", *max_lines);
+  char** new_content = (char **)safe_realloc(content, *max_lines * sizeof(char *));
   return new_content;
 }
 
-void free_lines(char ** content) {
-  for (size_t i = 0; i < num_lines; i++) {
+void free_lines(char **content, size_t *num_lines) {
+  for (size_t i = 0; i < *num_lines; i++) {
     free(content[i]);
     content[i] = NULL;
   }
 }
 
-void populate_content_from_file(FILE *file, char *** content_ptr) {
+void populate_content_from_file(FILE *file, char ***content_ptr, size_t *max_lines, size_t *num_lines) {
   char **content = *content_ptr;
   char * line = NULL;
   size_t len = 0; /* allocated size for line */
-  int read; /* number of chars in each line */
+  int read; /* number of chars in each line, not including null term */
   
-  num_lines = 0; /* Reset global var num_lines before reading */
-    while ((read = getline(&line, &len, file)) != -1) {  
+  *num_lines = 0;  // this ensures num_lines is set to 0
+  
+  while ((read = getline(&line, &len, file)) != -1) {  
     // Check if i is greater than max_lines
-    if (num_lines >= max_lines) {
+    if (*num_lines >= *max_lines) {
       /* increase lines if i is greater than max_lines */
-      max_lines = max_lines + 256; /* increaes max_lines by 256 */
-      *content_ptr = realloc_more_lines(content); // Update caller's pointer
+      *max_lines = *max_lines + 256; /* increaes max_lines by 256 */
+      *content_ptr = realloc_more_lines(content, max_lines); // Update caller's pointer
       content = *content_ptr; // Update local pointer
     }
-
-    content[num_lines] = (char * ) safe_malloc((read + 1) * sizeof(char)); /* Allocates enough memory + 1 for null term */ 
-    strcpy(content[num_lines], line); /* Copies line from file into content */
-    num_lines ++;
+    
+    printf("read: %d\n", read);
+    printf("len: %ld\n", len);
+    content[*num_lines] = (char * ) safe_malloc((read + 1) * sizeof(char)); /* Allocates enough memory + 1 for null term */ 
+    strcpy(content[*num_lines], line); /* Copies line from file into content */
+    (*num_lines)++;
 
   }
   free(line); // Free getline's buffer
@@ -60,8 +59,8 @@ void populate_content_from_file(FILE *file, char *** content_ptr) {
 
 }
 
-void read_content(char ** content) {
-  for (size_t i = 0; i < num_lines; i++) {
+void read_content(char **content, size_t *num_lines) {
+  for (size_t i = 0; i < *num_lines; i++) {
     printf("%s", content[i]);
   }
 }
@@ -79,33 +78,29 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
+
+  /* Initalize vars */
+  size_t max_lines = 256;
+  size_t num_lines = 0;
+
   /* Allocate space for storing lines */
   char ** content = safe_malloc(max_lines * sizeof(char *)); // allocates space for a bunch of strings 
-  if (!content) {
-      fprintf(stderr, "Memory allocation failed\n");
-      fclose(file);
-      return 1;
-  }
 
   /* Read file content */
-  populate_content_from_file(file, &content); // Pass reference to pointer
+  populate_content_from_file(file, &content, &max_lines, &num_lines); // Pass reference to pointers
   fclose(file); // Close file
 
 
-
-
   /* Display Content */
-  read_content(content);
+  read_content(content, &num_lines);
 
 
   /* Cleanup */
-  free_lines(content); 
+  free_lines(content, &num_lines); 
   free(content);
-  num_lines = 0;
   max_lines = 256;
+  num_lines = 0;
 
-  //while (1) { // Try to put some sort of input
-  //}
   return 0;        
 
 }
