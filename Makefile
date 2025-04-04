@@ -1,22 +1,25 @@
-# Default file is test.txt if no file is provided
-FILE ?= test.txt
+.PHONY: build run valgrind clean
 
-INCLUDE_DIR = safe_memory/include
-LIB_DIR = safe_memory/lib
+#
+# Default file is test.txt if no file is provided
+FILE ?= test/test1.txt
+
+INCLUDE_DIR = lib/safe_memory/include
+LIB_DIR = lib/safe_memory/lib
 
 CC = gcc
 CFLAGS = -g -Wall -Wextra -pedantic -std=c99 -I$(INCLUDE_DIR)
 LDFLAGS = -L$(LIB_DIR) -lsafe_memory
 
 build:
-	$(CC) $(CFLAGS) main.c $(LDFLAGS) -o main 
+	$(CC) $(CFLAGS) src/main.c $(LDFLAGS) -o ./build/main 
 
 valgrind:
-	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./main $(FILE)
+	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./build/main "$(FILE)"
 
 run:
-	./main $(FILE) 
+	./build/main "$(FILE)" 
 
 clean:
-	rm -f main
+	rm -f build/*
 
