@@ -18,5 +18,11 @@ run:
 	./main $(FILE) 
 
 clean:
-	rm -f main
+	rm -f main pt
 
+
+pt-build:
+	$(CC) $(CFLAGS) pt.c $(LDFLAGS) -o pt 
+
+pt-run:
+	./pt $(FILE) 
