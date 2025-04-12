@@ -25,4 +25,8 @@ pt-build:
 	$(CC) $(CFLAGS) pt.c $(LDFLAGS) -o pt 
 
 pt-run:
-	./pt $(FILE) 
+	./pt 
+
+pt-valgrind:
+	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./pt -s
+
