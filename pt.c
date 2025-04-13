@@ -170,7 +170,6 @@ void insertText(PieceTable *pt, char *text, int insert_point) {
 
   int count = 0;
   while (curr != NULL) {
-    printf("running_len = %d, curr_len = %d\n", running_len, curr->len);
 
     if (curr->next == NULL && insert_point >= running_len + curr->len) {
       /* Append at the end of the file */
@@ -242,6 +241,27 @@ void cleanup(PieceTable *pt, char *content) {
   free(content);
 }
 
+void dumpPieces(PieceTable *pt) {
+  printf("\n--- PIECE DUMP ---\n");
+  Piece *curr = pt->piece_head;
+  int index = 0;
+  while (curr != NULL) {
+    const char *type_str = curr->type == Original ? "Original" : "Added";
+    printf("Piece %d: [%s | offset=%d | len=%d] -> \"", index, type_str, curr->offset, curr->len);
+    
+    // Print actual text content of the piece
+    for (int i = 0; i < curr->len; i++) {
+      char ch = (curr->type == Original) ? pt->original[curr->offset + i] : pt->add[curr->offset + i];
+      putchar(ch);
+    }
+    printf("\"\n");
+
+    curr = curr->next;
+    index++;
+  }
+  printf("--- END ---\n\n");
+}
+
 int main() {
   char *text = "";
 
@@ -263,6 +283,7 @@ int main() {
   printf("total len: %ld\n", strlen(content));
   printf("pieces count: %d\n", pt->pieces_count);
 
+  dumpPieces(pt);
   cleanup(pt, content);
 
   return 0;
