@@ -76,6 +76,52 @@ static void append_to_add_buffer(PieceTable *pt, char *text) {
 
   pt->add_len = pt->add_len + text_len;
   strncat(pt->add, text, text_len);
+}
+
+Piece *insert_piece(PieceTable *pt, Piece *curr, Piece *prev, int local_insert, const char *text, int add_offset) {
+
+  Piece *left = NULL;
+  if (local_insert > 0) {
+    left = safe_malloc(sizeof(Piece));
+    left->type = curr->type;
+    left->offset = curr->offset;
+    left->len = local_insert;
+  }
+
+  Piece *added = safe_malloc(sizeof(Piece));
+  added->type = Added;
+  added->offset = add_offset;
+  added->len = strlen(text);
+  
+  Piece *right = NULL;
+  if (local_insert < curr->len) {
+    right = safe_malloc(sizeof(Piece));
+    right->type = curr->type;
+    right->offset = curr->offset + local_insert;
+    right->len = curr->len - local_insert;
+  }
+
+
+  if (prev == NULL) {
+    // Add the beginning
+    pt->piece_head = left ? left : added;
+  } else {
+    prev->next = left ? left : added;
+  }
+  
+  if (left) {
+    left->next = added;
+  }
+  if (right) {
+    added->next = right;
+    right->next = curr->next;
+  } else {
+    added->next = curr->next;
+  }
+  
+  free(curr); // free old piece
+  pt->pieces_count += (left ? 1 : 0) + 1 + (right ? 1 : 0);
+  printf("\n");
 
 }
  /*
@@ -83,7 +129,7 @@ static void append_to_add_buffer(PieceTable *pt, char *text) {
  * The Insert Algorithm
 - Append new text to the add buffer.
 - Find the piece in the piece table where the insertion point falls.
-- Split that piece into up to 3 (if at leftmost / rightmost of text,it will only split into two pieces):
+- Split that piece into up to 3 (if at leftmost / rightmost of piece, it will only split into two pieces):
     Pieces:
     1. The content before the insertion
     2. A new piece for the inserted text
@@ -97,67 +143,36 @@ void insertText(PieceTable *pt, char *text, int insert_point) {
 
   /* Appends new text to the add buffer */
   append_to_add_buffer(pt, text);
-  
-  /* Finds the piece in the piece table where the insertion point falls */
+
   printf("insert point: %d\n", insert_point);
+  /* Finds the piece in the piece table where the insertion point falls */
   int running_len = 0;
   Piece *curr = pt->piece_head;
   Piece *prev = NULL;
 
   int count = 0;
   while (curr != NULL) {
-    printf("running_len = %d, piece_len = %d\n", running_len, curr->len);
-    
-    if (running_len + insert_point < curr->len) {
-      printf("insert text into piece %d\n", count);
-      int local_offset = insert_point - running_len;
-      printf("local_offset=%d\n", local_offset);
-     
-      Piece *left = NULL;
-      if (local_offset > 0) {
-        left = safe_malloc(sizeof(Piece));
-        left->type = curr->type;
-        left->offset = curr->offset;
-        left->len = local_offset;
-      }
-      Piece *added = safe_malloc(sizeof(Piece));
-      added->type = Added;
-      added->offset = add_offset;
-      added->len = strlen(text);
-      
-      Piece *right = NULL;
-      if (local_offset < curr->len) {
-        right = safe_malloc(sizeof(Piece));
-        right->type = curr->type;
-        right->offset = curr->offset + local_offset;
-        right->len = curr->len - local_offset;
-      }
+    printf("running_len = %d, curr_len = %d\n", running_len, curr->len);
 
+    if (curr->next == NULL && insert_point >= running_len + curr->len) {
+      /* Append at the end of the file */
+      int local_insert = curr->len;
+      printf("End of file, local_insert = %d\n", local_insert);
+      insert_piece(pt, curr, prev, local_insert, text, add_offset);
 
-      if (prev == NULL) {
-        // Add the beginning
-        pt->piece_head = left ? left : added;
-      } else {
-        prev->next = left ? left : added;
-      }
-      
-      if (left) {
-        left->next = added;
-      }
-      if (right) {
-        added->next = right;
-        right->next = curr->next;
-      } else {
-        added->next = curr->next;
-      }
-      
-      free(curr); // free old piece
-      pt->pieces_count += (left ? 1 : 0) + 1 + (right ? 1 : 0);
+      return;
+    }
+    else if (insert_point < running_len + curr->len) {
+      /* Append in middle of file */
+      printf("\ninserting text into piece %d\n", count);
+      int local_insert = insert_point - running_len;
+      printf("local_insert=%d\n", local_insert);
+      insert_piece(pt, curr, prev, local_insert, text, add_offset);
       return;
     }
 
 
-    running_len = running_len + curr->len;
+    running_len += curr->len;
     prev = curr;
     curr = curr->next;
     count ++;
@@ -180,7 +195,7 @@ char *getContent(PieceTable *pt) {
   curr = pt->piece_head;
   Piece *next = NULL;
   int count = 0;
-  printf("\nREADING TEXT, type 0 = OG, type 1 = Add\n");
+  printf("\n\nREADING TEXT, type 0 = OG, type 1 = Add\n");
   while (curr != NULL) {
     printf("reading piece %d\n", count);
 
@@ -215,28 +230,17 @@ char *getContent(PieceTable *pt) {
 int main() {
   char *text = "Hello World";
   size_t text_len = strlen(text);
-  char *added_text = "cool ";
-  size_t added_text_len = strlen(added_text);
 
   PieceTable *pt = initPt(text);
 
-  insertText(pt, added_text, 6);
+  insertText(pt, "cool ", 6);
+  insertText(pt, "nice ", 30);
 
   char *content = getContent(pt);
 
   printf("\n\nCONTENT: %s\n", content);
+  printf("total len: %d\n", strlen(content));
 
-  /* Creating the pieces */
-
-
-  /*
-  printf("\n\nOriginal Text:\n");
-  printf("%s\n", pt->original);
-  printf("len: %d\n", pt->pieces[0].len);
-  printf("\n\nAdded Text:\n");
-  printf("%s\n", pt->add);
-  printf("len: %d\n", pt->pieces[1].len);
-  */ 
 
   /* Clean up */
   printf("\nCLEANUP\n");
