@@ -60,25 +60,28 @@ PieceTable * initPt(char *text) {
   return pt;
 }
 
-static void append_to_add_buffer(PieceTable *pt, char *text) {
-  size_t text_len = strlen(text);
-  
+void ensure_add_capacity(PieceTable *pt, int required) {
   /* Contanates to add buffer, ensures there is enough space allocated (reallocs if not) */
-  while (pt->add_len + text_len >= pt->add_cap) {
+  while (pt->add_len + required >= pt->add_cap) {
     /* Realloc add buffer */ 
     printf("add_cap went from %d", pt->add_cap);
-
     pt->add_cap = pt->add_cap * 2;
     pt->add = safe_realloc(pt->add, pt->add_cap);
-
     printf("to %d\n", pt->add_cap);
   }
+}
+
+
+static void append_to_add_buffer(PieceTable *pt, char *text) {
+  size_t text_len = strlen(text);
+ 
+  ensure_add_capacity(pt, text_len);
 
   pt->add_len = pt->add_len + text_len;
   strncat(pt->add, text, text_len);
 }
 
-Piece *insert_piece(PieceTable *pt, Piece *curr, Piece *prev, int local_insert, const char *text, int add_offset) {
+static void insert_piece(PieceTable *pt, Piece *curr, Piece *prev, int local_insert, const char *text, int add_offset) {
 
   Piece *left = NULL;
   if (local_insert > 0) {
@@ -120,13 +123,23 @@ Piece *insert_piece(PieceTable *pt, Piece *curr, Piece *prev, int local_insert, 
   }
   
   free(curr); // free old piece
-  pt->pieces_count += (left ? 1 : 0) + 1 + (right ? 1 : 0);
+  pt->pieces_count += (left ? 1 : 0) + (right ? 1 : 0);
   printf("\n");
+}
 
+int getTotalLen(PieceTable *pt) {
+  int result = 0;
+  Piece *curr = pt->piece_head;
+  while (curr) {
+    result += curr->len;
+    curr = curr->next;
+  }
+  return result;
 }
  /*
 
  * The Insert Algorithm
+- Checks insertion point is legal
 - Append new text to the add buffer.
 - Find the piece in the piece table where the insertion point falls.
 - Split that piece into up to 3 (if at leftmost / rightmost of piece, it will only split into two pieces):
@@ -137,7 +150,12 @@ Piece *insert_piece(PieceTable *pt, Piece *curr, Piece *prev, int local_insert, 
   then frees the old piece
 */
 void insertText(PieceTable *pt, char *text, int insert_point) {
-
+  /* Ensures insertion point is legal (between 0 and total_len) */
+  int total_len = getTotalLen(pt);
+  if (insert_point < 0 || insert_point > total_len) {
+    fprintf(stderr, "Error: Insertion point %d is out of bounds [0, %d]\n", insert_point, total_len);
+    return;
+  }
   /* we need to figure out what the offset is in the add buffer before we append to the add buffer */
   int add_offset = pt->add_len;
 
@@ -180,68 +198,32 @@ void insertText(PieceTable *pt, char *text, int insert_point) {
 }
 
 char *getContent(PieceTable *pt) {
-
   Piece *curr = pt->piece_head;
   // Calculate total length
-  int total_len = 0;
-  while (curr != NULL) {
-    total_len += curr->len;
-    curr = curr->next;
-  }
+  int total_len = getTotalLen(pt); 
   char *result = safe_malloc(total_len + 1);
   int result_pos = 0;
 
   /* Combine all substrings of pieces */
   curr = pt->piece_head;
-  Piece *next = NULL;
   int count = 0;
-  printf("\n\nREADING TEXT, type 0 = OG, type 1 = Add\n");
   while (curr != NULL) {
-    printf("reading piece %d\n", count);
-
-    printf("type: %d\n", curr->type);
-    printf("offset: %d\n", curr->offset);
-    printf("len: %d\n", curr->len);
-
-    char substr[curr->len + 1]; // +1 for Null term
-
     if (curr->type == 0) {
       /* Original */ 
-      strncpy(substr, pt->original + curr->offset, curr->len);
+      strncpy(result+result_pos, pt->original + curr->offset, curr->len);
     } else {
       /* Added */
-      strncpy(substr, pt->add + curr->offset, curr->len);
+      strncpy(result+result_pos, pt->add + curr->offset, curr->len);
     }
-    substr[curr->len] = '\0';
-    strncpy(result+result_pos, substr, curr->len);
-
-    printf("substr= %s\n", substr);
-    printf("\n");
-
     result_pos += curr->len;
     curr = curr->next;
     count ++;
   }
   result[total_len] = '\0';
   return result;
-
 }
 
-int main() {
-  char *text = "Hello World";
-  size_t text_len = strlen(text);
-
-  PieceTable *pt = initPt(text);
-
-  insertText(pt, "cool ", 6);
-  insertText(pt, "nice ", 30);
-
-  char *content = getContent(pt);
-
-  printf("\n\nCONTENT: %s\n", content);
-  printf("total len: %d\n", strlen(content));
-
-
+void cleanup(PieceTable *pt, char *content) {
   /* Clean up */
   printf("\nCLEANUP\n");
   Piece *curr = pt->piece_head;
@@ -258,5 +240,30 @@ int main() {
   free(pt->add);
   free(pt);
   free(content);
+}
+
+int main() {
+  char *text = "";
+
+  PieceTable *pt = initPt(text);
+
+  insertText(pt, "H", 0);
+  insertText(pt, "E", 1);
+  insertText(pt, "L", 2);
+  insertText(pt, "L", 3);
+  insertText(pt, "O", 4);
+  insertText(pt, " ", 5);
+  insertText(pt, "l", 3);
+
+  
+
+  char *content = getContent(pt);
+
+  printf("\n\nCONTENT: %s\n", content);
+  printf("total len: %ld\n", strlen(content));
+  printf("pieces count: %d\n", pt->pieces_count);
+
+  cleanup(pt, content);
+
   return 0;
 }
