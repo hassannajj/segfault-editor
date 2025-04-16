@@ -241,8 +241,8 @@ void cleanup(PieceTable *pt, char *content) {
   free(content);
 }
 
-void dumpPieces(PieceTable *pt) {
-  printf("\n--- PIECE DUMP ---\n");
+void printPieces(PieceTable *pt) {
+  printf("\n--- PIECES ---\n");
   Piece *curr = pt->piece_head;
   int index = 0;
   while (curr != NULL) {
@@ -283,7 +283,7 @@ int main() {
   printf("total len: %ld\n", strlen(content));
   printf("pieces count: %d\n", pt->pieces_count);
 
-  dumpPieces(pt);
+  printPieces(pt);
   cleanup(pt, content);
 
   return 0;
