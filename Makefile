@@ -1,32 +1,51 @@
-# Default file is test.txt if no file is provided
-FILE ?= test.txt
+# Default file if none is provided
+FILE ?= test1.txt
 
-INCLUDE_DIR = safe_memory/include
-LIB_DIR = safe_memory/lib
+# Directories
+LIB_DIR = lib
+INCLUDE_DIR = include
+BUILD_DIR = build
 
+# Compiler and flags
 CC = gcc
 CFLAGS = -g -Wall -Wextra -pedantic -std=c99 -I$(INCLUDE_DIR)
 LDFLAGS = -L$(LIB_DIR) -lsafe_memory
 
-build:
-	$(CC) $(CFLAGS) main.c $(LDFLAGS) -o main 
+# valgrind
+VALGRIND = valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes
 
-valgrind:
-	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./main $(FILE)
+# Ensure build/ dir exists
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
 
-run:
-	./main $(FILE) 
+# Default target
+all: main-build
 
+# === Main program ===
+main-build: $(BUILD_DIR)/main
+
+$(BUILD_DIR)/main: main.c | $(BUILD_DIR)
+	$(CC) $(CFLAGS) $< $(LDFLAGS) -o $@
+
+run: main-build
+	./$(BUILD_DIR)/main $(FILE)
+
+valgrind: main-build
+	 $(VALGRIND) ./$(BUILD_DIR)/main $(FILE)
+
+# === Piece Table Binary ===
+pt-build: $(BUILD_DIR)/pt
+
+$(BUILD_DIR)/pt: pt.c | $(BUILD_DIR)
+	$(CC) $(CFLAGS) $< $(LDFLAGS) -o $@
+
+pt-run: pt-build
+	./$(BUILD_DIR)/pt
+
+pt-valgrind: pt-build
+	$(VALGRIND) ./$(BUILD_DIR)/pt
+
+# === Cleanup ===
 clean:
-	rm -f main pt
-
-
-pt-build:
-	$(CC) $(CFLAGS) pt.c $(LDFLAGS) -o pt 
-
-pt-run:
-	./pt 
-
-pt-valgrind:
-	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./pt -s
+	rm -f $(BUILD_DIR)/*
 
