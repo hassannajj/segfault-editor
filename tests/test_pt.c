@@ -1,5 +1,6 @@
 #include "unity.h"
 #include "safe_memory.h" // if needed
+#include "../pt.c"
 
 void setUp(void) {}
 void tearDown(void) {}

@@ -5,10 +5,11 @@ FILE ?= test1.txt
 BUILD_DIR = build
 SAFE_MEMORY_DIR = lib/safe_memory
 UNITY_DIR = lib/unity
+INCLUDE_DIR = include
 
 # === Compiler & Flags ===
 CC = gcc
-CFLAGS = -g -Wall -Wextra -pedantic -std=c99 -I$(SAFE_MEMORY_DIR) -I$(UNITY_DIR)
+CFLAGS = -g -Wall -Wextra -pedantic -std=c99 -I$(SAFE_MEMORY_DIR) -I$(UNITY_DIR) -I$(INCLUDE_DIR)
 LDFLAGS = -L$(SAFE_MEMORY_DIR) -lsafe_memory
 
 # === Valgrind Settings ===
@@ -36,8 +37,8 @@ valgrind: main-build
 # === Piece Table Program ===
 pt-build: $(BUILD_DIR)/pt
 
-$(BUILD_DIR)/pt: pt.c | $(BUILD_DIR)
-	$(CC) $(CFLAGS) $< $(LDFLAGS) -o $@
+$(BUILD_DIR)/pt: pt.c src/pt_core.c | $(BUILD_DIR)
+	$(CC) $(CFLAGS) pt.c src/pt_core.c $(LDFLAGS) -o $@
 
 pt-run: pt-build
 	./$(BUILD_DIR)/pt
