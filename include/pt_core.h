@@ -69,7 +69,7 @@ void pt_print(PieceTable *pt);
 /*
  * Returns the length of the content
  */
-int pt_len(PieceTable *pt);
+int pt_content_len(PieceTable *pt);
 
 
 #endif

@@ -122,7 +122,7 @@ PieceTable * pt_init(char *text, int add_cap) {
 */
 void pt_insert_text(PieceTable *pt, char *text, int insert_point) {
   /* Ensures insertion point is legal (between 0 and total_len) */
-  int total_len = pt_len(pt);
+  int total_len = pt_content_len(pt);
   if (insert_point < 0 || insert_point > total_len) {
     fprintf(stderr, "Error: Insertion point %d is out of bounds [0, %d]\n", insert_point, total_len);
     return;
@@ -169,7 +169,7 @@ void pt_insert_text(PieceTable *pt, char *text, int insert_point) {
 char *pt_get_content(PieceTable *pt) {
   Piece *curr = pt->piece_head;
   // Calculate total length
-  int total_len = pt_len(pt); 
+  int total_len = pt_content_len(pt); 
   char *result = safe_malloc(total_len + 1);
   int result_pos = 0;
 
@@ -230,7 +230,7 @@ void pt_print(PieceTable *pt) {
   printf("--- END ---\n\n");
 }
 
-int pt_len(PieceTable *pt) {
+int pt_content_len(PieceTable *pt) {
   int result = 0;
   Piece *curr = pt->piece_head;
   while (curr) {

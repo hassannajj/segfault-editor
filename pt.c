@@ -20,9 +20,9 @@ int main() {
   char *content = pt_get_content(pt);
 
   printf("\n\nCONTENT: %s\n", content);
-  printf("pieces count: %d\n", pt->pieces_count);
+  printf("pieces count: %d\n", pt->piece_count);
 
-  pt_print(pt);
+
   pt_cleanup(pt, content);
 
   return 0;
