@@ -11,7 +11,7 @@ UNITY_DIR = lib/unity
 # === Compiler & Flags ===
 CC = gcc
 CFLAGS = -g -Wall -Wextra -pedantic -std=c99 -I$(SAFE_MEMORY_DIR) -I$(INCLUDE_DIR) -I$(UNITY_DIR)
-LDFLAGS = -L$(SAFE_MEMORY_DIR) -lsafe_memory
+LDFLAGS = -L$(SAFE_MEMORY_DIR) -lsafe_memory -lncurses
 
 # === Valgrind Settings ===
 VALGRIND = valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes
@@ -46,6 +46,17 @@ pt-run: pt-build
 
 pt-valgrind: pt-build
 	$(VALGRIND) ./$(BUILD_DIR)/pt
+
+# === Ncurses ===
+nc-build: $(BUILD_DIR)/nc 
+
+$(BUILD_DIR)/nc: src/nc.c | $(BUILD_DIR)
+	$(CC) $(CFLAGS) src/nc.c $(LDFLAGS) -o $@
+
+nc-run:
+	./build/nc
+
+
 
 # === Unit Testing with Unity ===
 UNITY_SRC = $(UNITY_DIR)/unity.c
