@@ -4,12 +4,13 @@ FILE ?= test1.txt
 # === Directories ===
 BUILD_DIR = build
 SAFE_MEMORY_DIR = lib/safe_memory
-UNITY_DIR = lib/unity
 INCLUDE_DIR = include
+UNITY_DIR = lib/unity
+
 
 # === Compiler & Flags ===
 CC = gcc
-CFLAGS = -g -Wall -Wextra -pedantic -std=c99 -I$(SAFE_MEMORY_DIR) -I$(UNITY_DIR) -I$(INCLUDE_DIR)
+CFLAGS = -g -Wall -Wextra -pedantic -std=c99 -I$(SAFE_MEMORY_DIR) -I$(INCLUDE_DIR) -I$(UNITY_DIR)
 LDFLAGS = -L$(SAFE_MEMORY_DIR) -lsafe_memory
 
 # === Valgrind Settings ===
@@ -47,15 +48,17 @@ pt-valgrind: pt-build
 	$(VALGRIND) ./$(BUILD_DIR)/pt
 
 # === Unit Testing with Unity ===
-TEST_SRC = tests/test_pt.c
 UNITY_SRC = $(UNITY_DIR)/unity.c
-SRC = pt.c
+UNITY_INC = lib/unity
+
+TEST_SRC = tests/test_pt.c
+CORE_SRC = src/pt_core.c
 TEST_BIN = $(BUILD_DIR)/test_runner
 
 test: $(TEST_BIN)
 	./$(TEST_BIN)
 
-$(TEST_BIN): $(TEST_SRC) $(UNITY_SRC) $(SRC) | $(BUILD_DIR)
+$(TEST_BIN): $(TEST_SRC) $(UNITY_SRC) $(CORE_SRC) | $(BUILD_DIR)
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
 test-valgrind: $(TEST_BIN)

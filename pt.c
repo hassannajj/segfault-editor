@@ -2,7 +2,6 @@
 #include "pt_core.h"
 
 int main() {
-    /*TODO: split this function in pt_core.h (public) and pt_core.c (public / private) , basically all the public functions are used in this main func */
 
   char *text = "";
 

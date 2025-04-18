@@ -30,6 +30,7 @@ typedef struct {
 
 /*
  * Inializes and allocates the piece table struct 
+ @param Text to inialize piece table with
  */
 PieceTable * pt_init(char *text);
 

@@ -552,11 +552,25 @@ void UnityConcludeTest(void)
     else if (!Unity.CurrentTestFailed)
     {
         UnityTestResultsBegin(Unity.TestFile, Unity.CurrentTestLineNumber);
+
+        const char *green = "\033[32m";
+        const char *reset = "\033[0m";
+
+        while (*green) UNITY_OUTPUT_CHAR(*green++);
         UnityPrint(UnityStrPass);
+        while (*reset) UNITY_OUTPUT_CHAR(*reset++);
     }
     else
     {
         Unity.TestFailures++;
+        UnityTestResultsBegin(Unity.TestFile, Unity.CurrentTestLineNumber);
+
+        const char *red = "\033[31m";
+        const char *reset = "\033[0m";
+
+        while (*red) UNITY_OUTPUT_CHAR(*red++);
+        UnityPrint(UnityStrFail);
+        while (*reset) UNITY_OUTPUT_CHAR(*reset++);
     }
 
     Unity.CurrentTestFailed = 0;
@@ -565,7 +579,6 @@ void UnityConcludeTest(void)
     UNITY_PRINT_EOL();
     UNITY_FLUSH_CALL();
 }
-
 /*-----------------------------------------------*/
 static void UnityAddMsgIfSpecified(const char* msg)
 {
@@ -2248,11 +2261,20 @@ int UnityEnd(void)
     UNITY_PRINT_EOL();
     if (Unity.TestFailures == 0U)
     {
+        const char *green = "\033[32m";
+        const char *reset = "\033[0m";
+        while (*green) UNITY_OUTPUT_CHAR(*green++);
         UnityPrint(UnityStrOk);
+        while (*reset) UNITY_OUTPUT_CHAR(*reset++);
     }
     else
     {
+        const char *red = "\033[31m";
+        const char *reset = "\033[0m";
+        while (*red) UNITY_OUTPUT_CHAR(*red++);
         UnityPrint(UnityStrFail);
+        while (*reset) UNITY_OUTPUT_CHAR(*reset++);
+
 #ifdef UNITY_DIFFERENTIATE_FINAL_FAIL
         UNITY_OUTPUT_CHAR('E'); UNITY_OUTPUT_CHAR('D');
 #endif

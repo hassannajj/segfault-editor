@@ -36,10 +36,8 @@ static void ensure_add_capacity(PieceTable *pt, int required) {
   /* Contanates to add buffer, ensures there is enough space allocated (reallocs if not) */
   while (pt->add_len + required >= pt->add_cap) {
     /* Realloc add buffer */ 
-    printf("add_cap went from %d", pt->add_cap);
     pt->add_cap = pt->add_cap * 2;
     pt->add = safe_realloc(pt->add, pt->add_cap);
-    printf("to %d\n", pt->add_cap);
   }
 }
 
@@ -96,7 +94,6 @@ static void insert_piece(PieceTable *pt, Piece *curr, Piece *prev, int local_ins
   
   free(curr); // free old piece
   pt->pieces_count += (left ? 1 : 0) + (right ? 1 : 0);
-  printf("\n");
 }
 
 int pt_len(PieceTable *pt) {
@@ -134,7 +131,6 @@ void pt_insert_text(PieceTable *pt, char *text, int insert_point) {
   /* Appends new text to the add buffer */
   append_to_add_buffer(pt, text);
 
-  printf("insert point: %d\n", insert_point);
   /* Finds the piece in the piece table where the insertion point falls */
   int running_len = 0;
   Piece *curr = pt->piece_head;
@@ -146,16 +142,16 @@ void pt_insert_text(PieceTable *pt, char *text, int insert_point) {
     if (curr->next == NULL && insert_point >= running_len + curr->len) {
       /* Append at the end of the file */
       int local_insert = curr->len;
-      printf("End of file, local_insert = %d\n", local_insert);
+      //printf("End of file, local_insert = %d\n", local_insert);
       insert_piece(pt, curr, prev, local_insert, text, add_offset);
 
       return;
     }
     else if (insert_point < running_len + curr->len) {
       /* Append in middle of file */
-      printf("\ninserting text into piece %d\n", count);
+      //printf("\ninserting text into piece %d\n", count);
       int local_insert = insert_point - running_len;
-      printf("local_insert=%d\n", local_insert);
+      //printf("local_insert=%d\n", local_insert);
       insert_piece(pt, curr, prev, local_insert, text, add_offset);
       return;
     }
@@ -196,13 +192,11 @@ char *pt_get_content(PieceTable *pt) {
 
 void pt_cleanup(PieceTable *pt, char *content) {
   /* Clean up */
-  printf("\nCLEANUP\n");
   Piece *curr = pt->piece_head;
   Piece *next = NULL;
   int count = 0;
   while (curr != NULL) {
     next = curr->next; 
-    printf("freeing piece %d\n", count);
     free(curr);
     curr = next;
     count ++;
