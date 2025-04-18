@@ -1,3 +1,5 @@
+
+
 #ifndef PT_CORE_H
 #define PT_CORE_H
 
@@ -21,7 +23,7 @@ to be IMMUTABLE
 */
 typedef struct {
   Piece *piece_head;
-  int pieces_count;
+  int piece_count;
   char *original; // original buffer
   char *add; // add buffer
   int add_cap;
@@ -32,7 +34,7 @@ typedef struct {
  * Inializes and allocates the piece table struct 
  @param Text to inialize piece table with
  */
-PieceTable * pt_init(char *text);
+PieceTable * pt_init(char *text, int add_cap);
 
  /*
  * The Insert Algorithm
@@ -50,7 +52,6 @@ void pt_insert_text(PieceTable *pt, char *text, int insert_point);
 
 /*
  * Returns the content that is stitched together from the piece table
- *
  */
 char *pt_get_content(PieceTable *pt);
 
@@ -63,6 +64,12 @@ void pt_cleanup(PieceTable *pt, char *content);
  * Prints the pieces with their respected buffers
  */
 void pt_print(PieceTable *pt);
+
+
+/*
+ * Returns the length of the content
+ */
+int pt_len(PieceTable *pt);
 
 
 #endif

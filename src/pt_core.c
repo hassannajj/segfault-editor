@@ -5,32 +5,7 @@
 
 #include "safe_memory.h"
 
-#define INITIAL_ADD_CAP 1024
 
-
-PieceTable * pt_init(char *text) {
-  size_t text_len = strlen(text);
-
-  PieceTable *pt = safe_malloc(sizeof(PieceTable));
-  pt->original = safe_malloc(text_len + 1);  
-
-  strncpy(pt->original, text, text_len);
-  
-  pt->add_cap = INITIAL_ADD_CAP;
-  pt->add_len = 0;
-  pt->add = safe_malloc(sizeof(char) * INITIAL_ADD_CAP);
-  pt->add[0] = '\0'; // null-terminate initally empty add buffer
-
-  pt->piece_head = safe_malloc(sizeof(Piece));
-  pt->pieces_count = 1;
-
-  pt->piece_head->type = Original;
-  pt->piece_head->offset = 0;
-  pt->piece_head->len = text_len;
-  pt->piece_head->next = NULL;
-
-  return pt;
-}
 
 static void ensure_add_capacity(PieceTable *pt, int required) {
   /* Contanates to add buffer, ensures there is enough space allocated (reallocs if not) */
@@ -93,19 +68,46 @@ static void insert_piece(PieceTable *pt, Piece *curr, Piece *prev, int local_ins
   }
   
   free(curr); // free old piece
-  pt->pieces_count += (left ? 1 : 0) + (right ? 1 : 0);
+  pt->piece_count += (left ? 1 : 0) + (right ? 1 : 0);
 }
 
-int pt_len(PieceTable *pt) {
-  int result = 0;
-  Piece *curr = pt->piece_head;
-  while (curr) {
-    result += curr->len;
-    curr = curr->next;
-  }
-  return result;
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+/* PUBLIC piece table functions */
+
+
+
+PieceTable * pt_init(char *text, int add_cap) {
+  size_t text_len = strlen(text);
+
+  PieceTable *pt = safe_malloc(sizeof(PieceTable));
+  pt->original = safe_malloc(text_len + 1);  
+
+  strncpy(pt->original, text, text_len);
+  
+  pt->add_cap = add_cap;
+  pt->add_len = 0;
+  pt->add = safe_malloc(sizeof(char) * add_cap);
+  pt->add[0] = '\0'; // null-terminate initally empty add buffer
+
+  pt->piece_head = safe_malloc(sizeof(Piece));
+  pt->piece_count = 1;
+
+  pt->piece_head->type = Original;
+  pt->piece_head->offset = 0;
+  pt->piece_head->len = text_len;
+  pt->piece_head->next = NULL;
+
+  return pt;
 }
+
  /*
+  *
+  *
 
  * The Insert Algorithm
 - Checks insertion point is legal
@@ -228,4 +230,13 @@ void pt_print(PieceTable *pt) {
   printf("--- END ---\n\n");
 }
 
+int pt_len(PieceTable *pt) {
+  int result = 0;
+  Piece *curr = pt->piece_head;
+  while (curr) {
+    result += curr->len;
+    curr = curr->next;
+  }
+  return result;
+}
 

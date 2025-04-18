@@ -1,11 +1,13 @@
 #include <stdio.h>
 #include "pt_core.h"
 
+#define INITIAL_ADD_CAP 1024
+
 int main() {
 
   char *text = "";
 
-  PieceTable *pt = pt_init(text);
+  PieceTable *pt = pt_init(text, INITIAL_ADD_CAP);
 
   pt_insert_text(pt, "Hey", 0);
   pt_insert_text(pt, "E", 1);
