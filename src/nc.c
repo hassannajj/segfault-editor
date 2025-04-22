@@ -1,7 +1,7 @@
 #include <curses.h>
 #include <stdlib.h>
 #include <signal.h>
-
+#include "pt_core.h"
 
 static void finish(int sig) {
     endwin();
@@ -42,26 +42,30 @@ int main() {
     }
   }
 
-  int i = 0;
+  unsigned int line = 0;
+  unsigned int cursor = 0;
   while (1) {
     int c = getch();
     // attrset(COLOR_PAIR(i % 7 + 1));
 
-    if (c == '\n') break;
-    if (c == KEY_BACKSPACE || c == KEY_DC || c == 127) {
-      if (i > 0) {
-        i --;
-        mvdelch(0, i); // y set to 0 for now
+    if (c == 'q') break;
+    if (c == '\n') {
+      line ++;
+      cursor = 0;
+    }
+    else if (c == KEY_BACKSPACE || c == KEY_DC || c == 127) {
+      if (cursor > 0) {
+        cursor --;
+        mvdelch(line, cursor); // y set to 0 for now
       }
     }
-
     else {
-      mvaddch(0, i, c); // y set to 0 for now
-      i++;
-
+      // Enter a character into ncurses buffer
+      mvaddch(line, cursor, c); // y set to 0 for now
+      cursor++;
     }
-    mvprintw(2, 0, "i: %d, key: %c, val: %d\n", i, c, c); /* DEBUG */
-    move(0, i);
+    mvprintw(10, 0, "line: %d, cursor: %d, key: %c, val: %d\n", line, cursor, c, c); /* DEBUG */
+    move(line, cursor);
 
     refresh();
   }

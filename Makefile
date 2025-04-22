@@ -48,10 +48,14 @@ pt-valgrind: pt-build
 	$(VALGRIND) ./$(BUILD_DIR)/pt
 
 # === Ncurses ===
+NCURSES_SRC = src/nc.c 
+PT_SRC = src/pt_core.c
+NCURSES_BIN = $(BUILD_DIR)/nc
+
 nc-build: $(BUILD_DIR)/nc 
 
-$(BUILD_DIR)/nc: src/nc.c | $(BUILD_DIR)
-	$(CC) $(CFLAGS) src/nc.c $(LDFLAGS) -o $@
+$(BUILD_DIR)/nc: $(NCURSES_SRC)| $(BUILD_DIR)
+	$(CC) $(CFLAGS) $(NCURSES_SRC) $(PT_SRC) $(LDFLAGS) -o $@
 
 nc-run:
 	./build/nc
