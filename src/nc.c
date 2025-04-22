@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <signal.h>
 #include "pt_core.h"
+#include "input.h"
 
 static void finish(int sig) {
     endwin();
@@ -44,29 +45,53 @@ int main() {
 
   unsigned int line = 0;
   unsigned int cursor = 0;
-  while (1) {
+  bool run = 1;
+  while (run) {
     int c = getch();
     // attrset(COLOR_PAIR(i % 7 + 1));
+    
+    InputResult input = read_input(c);
+    
+    switch (input.type) {
+      case INPUT_QUIT:
+        run = 0; 
+        break;
+      case INPUT_DELETE_CHAR:
+        if (cursor > 0){
+          cursor--;
+          mvdelch(line, cursor);
+        }
+        break;
+      case INPUT_ENTER_CHAR:
+        line++;
+        cursor = 0;
+        break;
 
-    if (c == 'q') break;
-    if (c == '\n') {
-      line ++;
-      cursor = 0;
+      case INPUT_MOVE_LEFT:
+        move_cursor_left();
+        break;
+      case INPUT_MOVE_RIGHT:
+        move_cursor_right();
+        break;
+      case INPUT_MOVE_UP:
+        move_cursor_up();
+        break;
+      case INPUT_MOVE_DOWN:
+        move_cursor_down();
+        break;
+
+      case INPUT_INSERT_CHAR:
+        // Enter a character into ncurses buffer
+        mvaddch(line, cursor, c); // y set to 0 for now
+        cursor++;
+        break;
+      default:
+        // Unknown command
+        break;
     }
-    else if (c == KEY_BACKSPACE || c == KEY_DC || c == 127) {
-      if (cursor > 0) {
-        cursor --;
-        mvdelch(line, cursor); // y set to 0 for now
-      }
-    }
-    else {
-      // Enter a character into ncurses buffer
-      mvaddch(line, cursor, c); // y set to 0 for now
-      cursor++;
-    }
+
     mvprintw(10, 0, "line: %d, cursor: %d, key: %c, val: %d\n", line, cursor, c, c); /* DEBUG */
     move(line, cursor);
-
     refresh();
   }
 

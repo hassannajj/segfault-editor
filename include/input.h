@@ -5,6 +5,7 @@ typedef enum {
   INPUT_MOVE_DOWN,
   INPUT_MOVE_UP,
   INPUT_DELETE_CHAR,
+  INPUT_ENTER_CHAR,
   INPUT_SAVE,
   INPUT_QUIT,
   INPUT_UNKNOWN
@@ -18,5 +19,6 @@ typedef struct {
 /*
  * Reads the raw key and returns the interpreted result
  */
-InputResult read_input();
+InputResult read_input(int c);
+
 

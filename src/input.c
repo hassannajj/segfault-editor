@@ -1,8 +1,11 @@
 #include "input.h"
-#include <ncurses.h>
+#include <ctype.h>
+#include <curses.h>
 
-InputResult read_input() {
-  switch (ch) {
+
+InputResult read_input(int c) {
+  InputResult result;
+  switch (c) {
     case KEY_LEFT:
       result.type = INPUT_MOVE_LEFT;
       break;
@@ -15,11 +18,12 @@ InputResult read_input() {
     case KEY_DOWN:
       result.type = INPUT_MOVE_DOWN;
       break;
+    case KEY_BACKSPACE: 
     case 127:  // Backspace
       result.type = INPUT_DELETE_CHAR;
       break;
     case 10:  // Enter
-      result.type = INPUT_INSERT_CHAR;
+      result.type = INPUT_ENTER_CHAR;
       result.data = '\n';
       break;
     case 19:  // Ctrl+S
@@ -29,11 +33,11 @@ InputResult read_input() {
       result.type = INPUT_QUIT;
       break;
     default:
-      if(isprint(ch)) {
+      if(isprint(c)) {
         result.type = INPUT_INSERT_CHAR;
-        result.data = (char)ch;
+        result.data = (char)c;
       } else {
-        result.type = INPUT_UNKNOWN:
+        result.type = INPUT_UNKNOWN;
       }
   }
   return result;
