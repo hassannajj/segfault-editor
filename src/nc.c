@@ -4,6 +4,33 @@
 #include "pt_core.h"
 #include "input.h"
 
+void move_cursor_left(unsigned int line, unsigned int *cursor) { 
+  if (*cursor > 0) {
+    (*cursor)--;
+    move(line, *cursor);
+  }
+}
+
+void move_cursor_right(unsigned int line, unsigned int *cursor) {
+  /*TODO: check condition of right boundary using length of line? */
+    (*cursor)++;
+    move(line, *cursor);
+}
+
+void move_cursor_up(unsigned int *line, unsigned int cursor) { 
+  if (*line > 0) {
+    (*line)--;
+    move(*line, cursor);
+  }
+}
+
+void move_cursor_down(unsigned int *line, unsigned int cursor) {
+  /*TODO: check condition of down boundary using number of lines? */
+    (*line)++;
+    move(*line, cursor);
+}
+
+
 static void finish(int sig) {
     endwin();
     /* do your non-curses wrapup here */
@@ -15,6 +42,7 @@ int main() {
   /* INITALIZATIONS */
   initscr(); /* initalizes curses library */
   signal(SIGINT, finish); /* clean exit on Ctrl-C */
+  raw(); // Enables usage of ctrl+s and ctrl+q
   keypad(stdscr, TRUE);  /* enable keyboard mapping */
 
   //(void) nonl();         /* tell curses not to do NL->CR/NL on output */
@@ -68,16 +96,16 @@ int main() {
         break;
 
       case INPUT_MOVE_LEFT:
-        move_cursor_left();
+        move_cursor_left(line, &cursor);
         break;
       case INPUT_MOVE_RIGHT:
-        move_cursor_right();
+        move_cursor_right(line, &cursor);
         break;
       case INPUT_MOVE_UP:
-        move_cursor_up();
+        move_cursor_up(&line, cursor);
         break;
       case INPUT_MOVE_DOWN:
-        move_cursor_down();
+        move_cursor_down(&line, cursor);
         break;
 
       case INPUT_INSERT_CHAR:
@@ -87,6 +115,8 @@ int main() {
         break;
       default:
         // Unknown command
+        mvprintw(12, 0, "Unknown command: key: %c, val: %d\n", c, c); /* DEBUG */
+        
         break;
     }
 
