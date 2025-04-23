@@ -4,30 +4,35 @@
 #include "pt_core.h"
 #include "input.h"
 
-void move_cursor_left(unsigned int line, unsigned int *cursor) { 
-  if (*cursor > 0) {
-    (*cursor)--;
-    move(line, *cursor);
+
+typedef struct {
+    int x, y;
+} Cursor;
+
+void move_left(Cursor *cursor) { 
+  if (cursor->x > 0) {
+    cursor->x--;
+    move(cursor->y, cursor->x);
   }
 }
 
-void move_cursor_right(unsigned int line, unsigned int *cursor) {
+void move_right(Cursor *cursor) {
   /*TODO: check condition of right boundary using length of line? */
-    (*cursor)++;
-    move(line, *cursor);
+    cursor->x++;
+    move(cursor->y, cursor->x);
 }
 
-void move_cursor_up(unsigned int *line, unsigned int cursor) { 
-  if (*line > 0) {
-    (*line)--;
-    move(*line, cursor);
+void move_up(Cursor *cursor) { 
+  if (cursor->y > 0) {
+    cursor->y++;
+    move(cursor->y, cursor->x);
   }
 }
 
-void move_cursor_down(unsigned int *line, unsigned int cursor) {
+void move_down(Cursor *cursor) {
   /*TODO: check condition of down boundary using number of lines? */
-    (*line)++;
-    move(*line, cursor);
+    cursor->y++;
+    move(cursor->y, cursor->x);
 }
 
 
@@ -71,11 +76,14 @@ int main() {
     }
   }
 
-  unsigned int line = 0;
-  unsigned int cursor = 0;
+  Cursor *cursor = malloc(sizeof(Cursor));
+  cursor->x = 0;
+  cursor->y = 0;
   bool run = 1;
   while (run) {
     int c = getch();
+
+    mvprintw(12, 0, "                                      ");
     // attrset(COLOR_PAIR(i % 7 + 1));
     
     InputResult input = read_input(c);
@@ -85,33 +93,33 @@ int main() {
         run = 0; 
         break;
       case INPUT_DELETE_CHAR:
-        if (cursor > 0){
-          cursor--;
-          mvdelch(line, cursor);
+        if (cursor->x > 0){
+          cursor->x--;
+          mvdelch(cursor->y, cursor->x);
         }
         break;
       case INPUT_ENTER_CHAR:
-        line++;
-        cursor = 0;
+        cursor->y++;
+        cursor->x = 0;
         break;
 
       case INPUT_MOVE_LEFT:
-        move_cursor_left(line, &cursor);
+        move_left(cursor);
         break;
       case INPUT_MOVE_RIGHT:
-        move_cursor_right(line, &cursor);
+        move_right(cursor);
         break;
       case INPUT_MOVE_UP:
-        move_cursor_up(&line, cursor);
+        move_up(cursor);
         break;
       case INPUT_MOVE_DOWN:
-        move_cursor_down(&line, cursor);
+        move_down(cursor);
         break;
 
       case INPUT_INSERT_CHAR:
         // Enter a character into ncurses buffer
-        mvaddch(line, cursor, c); // y set to 0 for now
-        cursor++;
+        mvaddch(cursor->y, cursor->x, c); // y set to 0 for now
+        cursor->x++;
         break;
       default:
         // Unknown command
@@ -120,11 +128,12 @@ int main() {
         break;
     }
 
-    mvprintw(10, 0, "line: %d, cursor: %d, key: %c, val: %d\n", line, cursor, c, c); /* DEBUG */
-    move(line, cursor);
+    mvprintw(10, 0, "cursor x: %d, y: %d\nkey: %c, val: %d", cursor->y, cursor->x, c, c); /* DEBUG */
+    move(cursor->y, cursor->x);
     refresh();
   }
 
   /* finish and clean up */
+  free(cursor);
   finish(0);
 }
