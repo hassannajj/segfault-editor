@@ -47,7 +47,7 @@ void test_insert_middle(void) {
 
 void test_insert_end(void) {
   PieceTable *pt = pt_init("Hell", INITIAL_ADD_CAP);
-  pt_insert_text(pt, "o", 4);
+  pt_insert_char(pt, 'o', 4);
   char *result = pt_get_content(pt);
   TEST_ASSERT_EQUAL_STRING("Hello", result);
   TEST_ASSERT_EQUAL_INT(2, pt->piece_count);
@@ -56,7 +56,7 @@ void test_insert_end(void) {
 
 void test_insert_invalid_low_index(void) {
   PieceTable *pt = pt_init("Hello", INITIAL_ADD_CAP);
-  pt_insert_text(pt, "X", -1);
+  pt_insert_char(pt, 'X', -1);
   char *result = pt_get_content(pt);
   TEST_ASSERT_EQUAL_STRING("Hello", result);
   TEST_ASSERT_EQUAL_INT(1, pt->piece_count);
@@ -65,7 +65,7 @@ void test_insert_invalid_low_index(void) {
 
 void test_insert_invalid_high_index(void) {
   PieceTable *pt = pt_init("Hello", INITIAL_ADD_CAP);
-  pt_insert_text(pt, "X", 6);
+  pt_insert_char(pt, 'X', 6);
   char *result = pt_get_content(pt);
   TEST_ASSERT_EQUAL_STRING("Hello", result);
   TEST_ASSERT_EQUAL_INT(1, pt->piece_count);
@@ -74,8 +74,8 @@ void test_insert_invalid_high_index(void) {
 
 void test_multiple_insertions(void) {
   PieceTable *pt = pt_init("Heo", INITIAL_ADD_CAP);
-  pt_insert_text(pt, "l", 2);
-  pt_insert_text(pt, "l", 2);
+  pt_insert_char(pt, 'l', 2);
+  pt_insert_char(pt, 'l', 2);
   char *result = pt_get_content(pt);
   TEST_ASSERT_EQUAL_STRING("Hello", result);
   TEST_ASSERT_EQUAL_INT(4, pt->piece_count);
@@ -144,6 +144,64 @@ void test_len_insert(void) {
   pt_cleanup(pt, result);
     
 }
+
+void test_pt_get_char_at_single_insert(void) {
+  PieceTable *pt = pt_init("", INITIAL_ADD_CAP);
+
+  pt_insert_char(pt, 'H', 0);  // Insert 'H' at beginning
+
+  TEST_ASSERT_EQUAL_CHAR('H', pt_get_char_at(pt, 0));
+  //TEST_ASSERT_EQUAL_CHAR('\0', pt_get_char_at(pt, 1)); // Out of bounds
+  
+  char *result = pt_get_content(pt);
+  pt_cleanup(pt, result);
+}
+
+void test_pt_get_char_at_multiple_insert(void) {
+  PieceTable *pt = pt_init("", INITIAL_ADD_CAP);
+
+  pt_insert_char(pt, 'H', 0);
+  pt_insert_char(pt, 'E', 1);
+  pt_insert_char(pt, 'Y', 2);
+
+  TEST_ASSERT_EQUAL_CHAR('H', pt_get_char_at(pt, 0));
+  TEST_ASSERT_EQUAL_CHAR('E', pt_get_char_at(pt, 1));
+  TEST_ASSERT_EQUAL_CHAR('Y', pt_get_char_at(pt, 2));
+  //TEST_ASSERT_EQUAL_CHAR('\0', pt_get_char_at(pt, 3)); // Beyond content
+  
+  char *result = pt_get_content(pt);
+  pt_cleanup(pt, result);
+}
+
+void test_pt_get_char_at_with_initial_text_and_insert(void) {
+    PieceTable *pt = pt_init("Goodbye", INITIAL_ADD_CAP);
+
+    // Initial assertions from original buffer
+    TEST_ASSERT_EQUAL_CHAR('G', pt_get_char_at(pt, 0));
+    TEST_ASSERT_EQUAL_CHAR('o', pt_get_char_at(pt, 1));
+    TEST_ASSERT_EQUAL_CHAR('o', pt_get_char_at(pt, 2));
+    TEST_ASSERT_EQUAL_CHAR('d', pt_get_char_at(pt, 3));
+    TEST_ASSERT_EQUAL_CHAR('b', pt_get_char_at(pt, 4));  // this will shift after insert
+
+    // Insert 'X' between 'd' and 'b'
+    pt_insert_char(pt, 'X', 4);
+
+    // Validate post-insert buffer: "GoodXbye"
+    TEST_ASSERT_EQUAL_CHAR('G', pt_get_char_at(pt, 0));
+    TEST_ASSERT_EQUAL_CHAR('o', pt_get_char_at(pt, 1));
+    TEST_ASSERT_EQUAL_CHAR('o', pt_get_char_at(pt, 2));
+    TEST_ASSERT_EQUAL_CHAR('d', pt_get_char_at(pt, 3));
+    TEST_ASSERT_EQUAL_CHAR('X', pt_get_char_at(pt, 4));
+    TEST_ASSERT_EQUAL_CHAR('b', pt_get_char_at(pt, 5));
+    TEST_ASSERT_EQUAL_CHAR('y', pt_get_char_at(pt, 6));
+    TEST_ASSERT_EQUAL_CHAR('e', pt_get_char_at(pt, 7));
+    TEST_ASSERT_EQUAL_CHAR('\0', pt_get_char_at(pt, 8));  // Out of bounds
+
+    char *result = pt_get_content(pt);
+    pt_cleanup(pt, result);
+}
+
+
 void test_complex_edit_sequence(void) {
   PieceTable *pt = pt_init("Programming", INITIAL_ADD_CAP);
 
@@ -206,7 +264,12 @@ int main(void) {
   // Test len
   RUN_TEST(test_len_init); 
   RUN_TEST(test_len_insert); 
-  
+
+  // Test getting character at a specific index
+  RUN_TEST(test_pt_get_char_at_single_insert);
+  RUN_TEST(test_pt_get_char_at_multiple_insert); 
+  RUN_TEST(test_pt_get_char_at_with_initial_text_and_insert);
+
   // Complex
   RUN_TEST(test_complex_edit_sequence); 
 

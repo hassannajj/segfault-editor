@@ -49,6 +49,7 @@ PieceTable * pt_init(char *text, int add_cap);
   then frees the old piece
 */
 void pt_insert_text(PieceTable *pt, char *text, int insert_point);
+void pt_insert_char(PieceTable *pt, char c, int index);
 
 /*
  * Returns the content that is stitched together from the piece table
@@ -68,8 +69,14 @@ void pt_print(PieceTable *pt);
 
 /*
  * Returns the length of the content
+ * O(n + m) which is a little slow performance wise
+ * n = number of pieces
+ * m = total chars in document
+ * Useful for saving, exporting
  */
 int pt_content_len(PieceTable *pt);
+
+char pt_get_char_at(PieceTable *pt, int i);
 
 
 #endif

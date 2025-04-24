@@ -122,6 +122,8 @@ PieceTable * pt_init(char *text, int add_cap) {
 */
 void pt_insert_text(PieceTable *pt, char *text, int insert_point) {
   /* Ensures insertion point is legal (between 0 and total_len) */
+  /*TODO: this might be inefficient, maybe think about creating a setter functions
+   * to set the total length? */
   int total_len = pt_content_len(pt);
   if (insert_point < 0 || insert_point > total_len) {
     fprintf(stderr, "Error: Insertion point %d is out of bounds [0, %d]\n", insert_point, total_len);
@@ -165,6 +167,12 @@ void pt_insert_text(PieceTable *pt, char *text, int insert_point) {
     count ++;
   } 
 }
+
+void pt_insert_char(PieceTable *pt, char c, int index) {
+  char s[2] = {c, '\0'};
+  pt_insert_text(pt, s, index);
+}
+
 
 char *pt_get_content(PieceTable *pt) {
   Piece *curr = pt->piece_head;
@@ -238,5 +246,27 @@ int pt_content_len(PieceTable *pt) {
     curr = curr->next;
   }
   return result;
+}
+
+char pt_get_char_at(PieceTable *pt, int i) {
+  Piece *curr = pt->piece_head;
+  int running_len = 0;
+  while (curr) {
+    if (i < running_len + curr->len) {
+      int buffer_index = curr->offset + (i - running_len);
+      if (curr->type == Original) {
+        return pt->original[buffer_index];
+      } else {
+        return pt->add[buffer_index];
+      }
+    }
+    running_len += curr->len;
+    curr = curr->next;
+  }
+  /* Didn't return anything */  
+  int total_len = pt_content_len(pt);
+  fprintf(stderr, "Error: Insertion point %d is out of bounds [0, %d]\n", i, total_len);
+
+  return '\0';
 }
 
