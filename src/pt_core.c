@@ -200,7 +200,7 @@ char *pt_get_content(PieceTable *pt) {
   return result;
 }
 
-void pt_cleanup(PieceTable *pt, char *content) {
+void pt_cleanup(PieceTable *pt) {
   /* Clean up */
   Piece *curr = pt->piece_head;
   Piece *next = NULL;
@@ -214,7 +214,6 @@ void pt_cleanup(PieceTable *pt, char *content) {
   free(pt->original);
   free(pt->add);
   free(pt);
-  free(content);
 }
 
 void pt_print(PieceTable *pt) {

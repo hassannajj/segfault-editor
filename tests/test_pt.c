@@ -14,7 +14,8 @@ void test_init_empty_text(void) {
   char *result = pt_get_content(pt);
   TEST_ASSERT_EQUAL_STRING("", result);
   TEST_ASSERT_EQUAL_INT(1, pt->piece_count);
-  pt_cleanup(pt, result);
+  pt_cleanup(pt);
+  free(result);
 }
 
 void test_init_with_text(void) {
@@ -24,7 +25,8 @@ void test_init_with_text(void) {
   char *result = pt_get_content(pt);
   TEST_ASSERT_EQUAL_STRING("Hello", result);
   TEST_ASSERT_EQUAL_INT(1, pt->piece_count);
-  pt_cleanup(pt, result);
+  pt_cleanup(pt);
+  free(result);
 }
 
 void test_insert_beginning(void) {
@@ -33,7 +35,8 @@ void test_insert_beginning(void) {
   char *result = pt_get_content(pt);
   TEST_ASSERT_EQUAL_STRING("Hello", result);
   TEST_ASSERT_EQUAL_INT(2, pt->piece_count);
-  pt_cleanup(pt, result);
+  pt_cleanup(pt);
+  free(result);
 }
 
 void test_insert_middle(void) {
@@ -42,7 +45,8 @@ void test_insert_middle(void) {
   char *result = pt_get_content(pt);
   TEST_ASSERT_EQUAL_STRING("Hello", result);
   TEST_ASSERT_EQUAL_INT(3, pt->piece_count);
-  pt_cleanup(pt, result);
+  pt_cleanup(pt);
+  free(result);
 }
 
 void test_insert_end(void) {
@@ -51,7 +55,8 @@ void test_insert_end(void) {
   char *result = pt_get_content(pt);
   TEST_ASSERT_EQUAL_STRING("Hello", result);
   TEST_ASSERT_EQUAL_INT(2, pt->piece_count);
-  pt_cleanup(pt, result);
+  pt_cleanup(pt);
+  free(result);
 }
 
 void test_insert_invalid_low_index(void) {
@@ -60,7 +65,8 @@ void test_insert_invalid_low_index(void) {
   char *result = pt_get_content(pt);
   TEST_ASSERT_EQUAL_STRING("Hello", result);
   TEST_ASSERT_EQUAL_INT(1, pt->piece_count);
-  pt_cleanup(pt, result);
+  pt_cleanup(pt);
+  free(result);
 } 
 
 void test_insert_invalid_high_index(void) {
@@ -69,7 +75,8 @@ void test_insert_invalid_high_index(void) {
   char *result = pt_get_content(pt);
   TEST_ASSERT_EQUAL_STRING("Hello", result);
   TEST_ASSERT_EQUAL_INT(1, pt->piece_count);
-  pt_cleanup(pt, result);
+  pt_cleanup(pt);
+  free(result);
 } 
 
 void test_multiple_insertions(void) {
@@ -79,7 +86,8 @@ void test_multiple_insertions(void) {
   char *result = pt_get_content(pt);
   TEST_ASSERT_EQUAL_STRING("Hello", result);
   TEST_ASSERT_EQUAL_INT(4, pt->piece_count);
-  pt_cleanup(pt, result);
+  pt_cleanup(pt);
+  free(result);
 }
 
 void test_insert_multichar_beginning(void) {
@@ -88,7 +96,9 @@ void test_insert_multichar_beginning(void) {
   char *result = pt_get_content(pt);
   TEST_ASSERT_EQUAL_STRING("Hello World", result);
   TEST_ASSERT_EQUAL_INT(2, pt->piece_count);
-  pt_cleanup(pt, result);
+  pt_cleanup(pt);
+  free(result);
+
 }
 
 void test_insert_multichar_middle(void) {
@@ -97,7 +107,8 @@ void test_insert_multichar_middle(void) {
   char *result = pt_get_content(pt);
   TEST_ASSERT_EQUAL_STRING("Hello World", result);
   TEST_ASSERT_EQUAL_INT(3, pt->piece_count);
-  pt_cleanup(pt, result);
+  pt_cleanup(pt);
+  free(result);
 }
 
 void test_insert_multichar_end(void) {
@@ -106,7 +117,8 @@ void test_insert_multichar_end(void) {
   char *result = pt_get_content(pt);
   TEST_ASSERT_EQUAL_STRING("Hello World", result);
   TEST_ASSERT_EQUAL_INT(2, pt->piece_count);
-  pt_cleanup(pt, result);
+  pt_cleanup(pt);
+  free(result);
 }
 
 void test_add_cap_init(void) {
@@ -115,7 +127,8 @@ void test_add_cap_init(void) {
   char *result = pt_get_content(pt);
   TEST_ASSERT_EQUAL_STRING("Hello", result);
   TEST_ASSERT_EQUAL_INT(1, pt->add_cap);
-  pt_cleanup(pt, result);
+  pt_cleanup(pt);
+  free(result);
 }
 
 void test_add_cap_insert(void) {
@@ -124,7 +137,8 @@ void test_add_cap_insert(void) {
   char *result = pt_get_content(pt);
   TEST_ASSERT_EQUAL_STRING("Hello World", result);
   TEST_ASSERT_EQUAL_INT(8, pt->add_cap);
-  pt_cleanup(pt, result);
+  pt_cleanup(pt);
+  free(result);
 }
 
 void test_len_init(void) {
@@ -132,7 +146,8 @@ void test_len_init(void) {
   char *result = pt_get_content(pt);
   int len = pt_content_len(pt);
   TEST_ASSERT_EQUAL_INT(5, len);
-  pt_cleanup(pt, result);
+  pt_cleanup(pt);
+  free(result);
 }
 
 void test_len_insert(void) {
@@ -141,8 +156,8 @@ void test_len_insert(void) {
   char *result = pt_get_content(pt);
   int len = pt_content_len(pt);
   TEST_ASSERT_EQUAL_INT(17, len);
-  pt_cleanup(pt, result);
-    
+  pt_cleanup(pt);
+  free(result);
 }
 
 void test_pt_get_char_at_single_insert(void) {
@@ -151,10 +166,9 @@ void test_pt_get_char_at_single_insert(void) {
   pt_insert_char(pt, 'H', 0);  // Insert 'H' at beginning
 
   TEST_ASSERT_EQUAL_CHAR('H', pt_get_char_at(pt, 0));
-  //TEST_ASSERT_EQUAL_CHAR('\0', pt_get_char_at(pt, 1)); // Out of bounds
+  TEST_ASSERT_EQUAL_CHAR('\0', pt_get_char_at(pt, 1)); // Out of bounds
   
-  char *result = pt_get_content(pt);
-  pt_cleanup(pt, result);
+  pt_cleanup(pt);
 }
 
 void test_pt_get_char_at_multiple_insert(void) {
@@ -167,38 +181,37 @@ void test_pt_get_char_at_multiple_insert(void) {
   TEST_ASSERT_EQUAL_CHAR('H', pt_get_char_at(pt, 0));
   TEST_ASSERT_EQUAL_CHAR('E', pt_get_char_at(pt, 1));
   TEST_ASSERT_EQUAL_CHAR('Y', pt_get_char_at(pt, 2));
-  //TEST_ASSERT_EQUAL_CHAR('\0', pt_get_char_at(pt, 3)); // Beyond content
+  TEST_ASSERT_EQUAL_CHAR('\0', pt_get_char_at(pt, 3)); // Beyond content
   
-  char *result = pt_get_content(pt);
-  pt_cleanup(pt, result);
+  pt_cleanup(pt);
 }
 
 void test_pt_get_char_at_with_initial_text_and_insert(void) {
-    PieceTable *pt = pt_init("Goodbye", INITIAL_ADD_CAP);
+  PieceTable *pt = pt_init("Goodbye", INITIAL_ADD_CAP);
 
-    // Initial assertions from original buffer
-    TEST_ASSERT_EQUAL_CHAR('G', pt_get_char_at(pt, 0));
-    TEST_ASSERT_EQUAL_CHAR('o', pt_get_char_at(pt, 1));
-    TEST_ASSERT_EQUAL_CHAR('o', pt_get_char_at(pt, 2));
-    TEST_ASSERT_EQUAL_CHAR('d', pt_get_char_at(pt, 3));
-    TEST_ASSERT_EQUAL_CHAR('b', pt_get_char_at(pt, 4));  // this will shift after insert
+  // Initial assertions from original buffer
+  TEST_ASSERT_EQUAL_CHAR('G', pt_get_char_at(pt, 0));
+  TEST_ASSERT_EQUAL_CHAR('o', pt_get_char_at(pt, 1));
+  TEST_ASSERT_EQUAL_CHAR('o', pt_get_char_at(pt, 2));
+  TEST_ASSERT_EQUAL_CHAR('d', pt_get_char_at(pt, 3));
+  TEST_ASSERT_EQUAL_CHAR('b', pt_get_char_at(pt, 4));  // this will shift after insert
 
-    // Insert 'X' between 'd' and 'b'
-    pt_insert_char(pt, 'X', 4);
+  // Insert 'X' between 'd' and 'b'
+  pt_insert_char(pt, 'X', 4);
 
-    // Validate post-insert buffer: "GoodXbye"
-    TEST_ASSERT_EQUAL_CHAR('G', pt_get_char_at(pt, 0));
-    TEST_ASSERT_EQUAL_CHAR('o', pt_get_char_at(pt, 1));
-    TEST_ASSERT_EQUAL_CHAR('o', pt_get_char_at(pt, 2));
-    TEST_ASSERT_EQUAL_CHAR('d', pt_get_char_at(pt, 3));
-    TEST_ASSERT_EQUAL_CHAR('X', pt_get_char_at(pt, 4));
-    TEST_ASSERT_EQUAL_CHAR('b', pt_get_char_at(pt, 5));
-    TEST_ASSERT_EQUAL_CHAR('y', pt_get_char_at(pt, 6));
-    TEST_ASSERT_EQUAL_CHAR('e', pt_get_char_at(pt, 7));
-    TEST_ASSERT_EQUAL_CHAR('\0', pt_get_char_at(pt, 8));  // Out of bounds
+  // Validate post-insert buffer: "GoodXbye"
+  TEST_ASSERT_EQUAL_CHAR('G', pt_get_char_at(pt, 0));
+  TEST_ASSERT_EQUAL_CHAR('o', pt_get_char_at(pt, 1));
+  TEST_ASSERT_EQUAL_CHAR('o', pt_get_char_at(pt, 2));
+  TEST_ASSERT_EQUAL_CHAR('d', pt_get_char_at(pt, 3));
+  TEST_ASSERT_EQUAL_CHAR('X', pt_get_char_at(pt, 4));
+  TEST_ASSERT_EQUAL_CHAR('b', pt_get_char_at(pt, 5));
+  TEST_ASSERT_EQUAL_CHAR('y', pt_get_char_at(pt, 6));
+  TEST_ASSERT_EQUAL_CHAR('e', pt_get_char_at(pt, 7));
+  TEST_ASSERT_EQUAL_CHAR('\0', pt_get_char_at(pt, 8));  // Out of bounds
 
-    char *result = pt_get_content(pt);
-    pt_cleanup(pt, result);
+  pt_cleanup(pt);
+
 }
 
 
@@ -231,7 +244,8 @@ void test_complex_edit_sequence(void) {
   TEST_ASSERT_EQUAL_INT(45, pt_content_len(pt));
 
 
-  pt_cleanup(pt, result);
+  pt_cleanup(pt);
+  free(result);
 }
 
 

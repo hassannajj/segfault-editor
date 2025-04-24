@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "pt_core.h"
 
 #define INITIAL_ADD_CAP 1024
@@ -25,8 +26,8 @@ int main() {
   printf("\n\nCONTENT: %s\n", content);
   printf("pieces count: %d\n", pt->piece_count);
 
-
-  pt_cleanup(pt, content);
+  pt_cleanup(pt);
+  free(content);
 
   return 0;
 }

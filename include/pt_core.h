@@ -52,14 +52,15 @@ void pt_insert_text(PieceTable *pt, char *text, int insert_point);
 void pt_insert_char(PieceTable *pt, char c, int index);
 
 /*
- * Returns the content that is stitched together from the piece table
+ * Dynamically allocates content that is stitched together from the piece table
+ * and returns it
  */
 char *pt_get_content(PieceTable *pt);
 
 /*
- * Frees any dynamically allocated memory
+ * Frees any dynamically allocated memory in piece table
  */
-void pt_cleanup(PieceTable *pt, char *content);
+void pt_cleanup(PieceTable *pt);
 
 /*
  * Prints the pieces with their respected buffers
