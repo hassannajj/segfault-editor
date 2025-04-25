@@ -4,6 +4,7 @@
 #include "pt_core.h"
 #include "input.h"
 
+#define INITIAL_ADD_CAP 1024
 
 typedef struct {
     int x, y;
@@ -35,6 +36,14 @@ void move_down(Cursor *cursor) {
     move(cursor->y, cursor->x);
 }
 
+void render_ncurses(PieceTable *pt) {
+  mvprintw(13, 0, "pt char test");
+
+  for (int i = 0; i < pt_content_len(pt); i++) {
+    char c = pt_get_char_at(pt, i);
+    mvprintw(14, i, "%c\n", c);
+  }
+}
 
 static void finish(int sig) {
     endwin();
@@ -77,6 +86,8 @@ int main() {
   }
 
   Cursor *cursor = malloc(sizeof(Cursor));
+  PieceTable *pt = pt_init("", INITIAL_ADD_CAP);
+
   cursor->x = 0;
   cursor->y = 0;
   bool run = 1;
@@ -118,6 +129,7 @@ int main() {
 
       case INPUT_INSERT_CHAR:
         // Enter a character into ncurses buffer
+        pt_insert_char(pt, c, cursor->x);
         mvaddch(cursor->y, cursor->x, c); // y set to 0 for now
         cursor->x++;
         break;
@@ -130,6 +142,7 @@ int main() {
 
     mvprintw(10, 0, "cursor x: %d, y: %d\nkey: %c, val: %d", cursor->y, cursor->x, c, c); /* DEBUG */
     move(cursor->y, cursor->x);
+    render_ncurses(pt);
     refresh();
   }
 
