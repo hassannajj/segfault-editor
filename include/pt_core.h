@@ -24,6 +24,8 @@ to be IMMUTABLE
 typedef struct {
   Piece *piece_head;
   int piece_count;
+  int content_len; // Number of chars in the content of pieces
+                   //
   char *original; // original buffer
   char *add; // add buffer
   int add_cap;
@@ -68,15 +70,7 @@ void pt_cleanup(PieceTable *pt);
 void pt_print(PieceTable *pt);
 
 
-/*
- * Returns the length of the content
- * O(n + m) which is a little slow performance wise
- * n = number of pieces
- * m = total chars in document
- * Useful for saving, exporting
- */
-int pt_content_len(PieceTable *pt);
-
+/* Gets character at a specific RAW index */
 char pt_get_char_at(PieceTable *pt, int i);
 
 

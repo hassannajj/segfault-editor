@@ -25,7 +25,7 @@ void move_right(Cursor *cursor) {
 
 void move_up(Cursor *cursor) { 
   if (cursor->y > 0) {
-    cursor->y++;
+    cursor->y--;
     move(cursor->y, cursor->x);
   }
 }
@@ -37,11 +37,22 @@ void move_down(Cursor *cursor) {
 }
 
 void render_ncurses(PieceTable *pt) {
-  mvprintw(13, 0, "pt char test");
+  //clear();
+  int y = 0;
+  int x = 0;
 
   for (int i = 0; i < pt_content_len(pt); i++) {
     char c = pt_get_char_at(pt, i);
-    mvprintw(14, i, "%c\n", c);
+    if (c == '\n') {
+      y++;
+      x = 0;
+      move(y, x);  // <--- move cursor manually when \n
+
+    } else {
+      mvaddch(y, x, c); // Prints one char at a time
+      x ++;
+    }
+
   }
 }
 
@@ -65,6 +76,7 @@ int main() {
   //(void) echo();         /* echo input - in color */
 
 
+
   /* color */ 
   if (has_colors()) {
     {
@@ -86,7 +98,7 @@ int main() {
   }
 
   Cursor *cursor = malloc(sizeof(Cursor));
-  PieceTable *pt = pt_init("", INITIAL_ADD_CAP);
+  PieceTable *pt = pt_init("this is line 3.\nthis is line2.\nThis is line 1.!\n", INITIAL_ADD_CAP);
 
   cursor->x = 0;
   cursor->y = 0;
@@ -94,7 +106,6 @@ int main() {
   while (run) {
     int c = getch();
 
-    mvprintw(12, 0, "                                      ");
     // attrset(COLOR_PAIR(i % 7 + 1));
     
     InputResult input = read_input(c);
@@ -107,9 +118,12 @@ int main() {
         if (cursor->x > 0){
           cursor->x--;
           mvdelch(cursor->y, cursor->x);
+        } else if (cursor->y > 0) {
+          cursor->y--;
         }
         break;
       case INPUT_ENTER_CHAR:
+        pt_insert_char(pt, '\n', pt_content_len(pt));
         cursor->y++;
         cursor->x = 0;
         break;
@@ -129,21 +143,21 @@ int main() {
 
       case INPUT_INSERT_CHAR:
         // Enter a character into ncurses buffer
-        pt_insert_char(pt, c, cursor->x);
-        mvaddch(cursor->y, cursor->x, c); // y set to 0 for now
+        pt_insert_char(pt, c, pt_content_len(pt));
+        //mvaddch(cursor->y, cursor->x, c); // y set to 0 for now
         cursor->x++;
         break;
       default:
         // Unknown command
-        mvprintw(12, 0, "Unknown command: key: %c, val: %d\n", c, c); /* DEBUG */
+        mvprintw(9, 0, "Unknown command: key: %c, val: %d\n", c, c); /* DEBUG */
         
         break;
     }
 
-    mvprintw(10, 0, "cursor x: %d, y: %d\nkey: %c, val: %d", cursor->y, cursor->x, c, c); /* DEBUG */
-    move(cursor->y, cursor->x);
+    mvprintw(10, 0, "cursor y: %d, x: %d\nkey: %c, val: %d, \npt_content_len: %d", cursor->y, cursor->x, c, c, pt_content_len(pt)); /* DEBUG */
     render_ncurses(pt);
     refresh();
+
   }
 
   /* finish and clean up */

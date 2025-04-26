@@ -6,19 +6,13 @@
 
 int main() {
 
-  char *text = "";
+  char *text = "World";
 
   PieceTable *pt = pt_init(text, INITIAL_ADD_CAP);
 
-  pt_insert_text(pt, "Hey", 0);
-  pt_insert_text(pt, "E", 1);
-  pt_insert_text(pt, "L", 2);
-  pt_insert_text(pt, "L", 3);
-  pt_insert_text(pt, "O", 4);
-  pt_insert_text(pt, " ", 5);
-  pt_insert_text(pt, "l", 3);
+  pt_insert_text(pt, "Hello ", 0);
   pt_print(pt);
-  int i = 9;
+  int i = 3;
   printf("index %d: %c", i, pt_get_char_at(pt, i));
 
   char *content = pt_get_content(pt);

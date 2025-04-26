@@ -80,7 +80,7 @@ static void insert_piece(PieceTable *pt, Piece *curr, Piece *prev, int local_ins
 /* PUBLIC piece table functions */
 
 
-
+/* Initializes the values for the piece table */
 PieceTable * pt_init(char *text, int add_cap) {
   size_t text_len = strlen(text);
 
@@ -97,10 +97,13 @@ PieceTable * pt_init(char *text, int add_cap) {
   pt->piece_head = safe_malloc(sizeof(Piece));
   pt->piece_count = 1;
 
+  pt->content_len = text_len;
+
   pt->piece_head->type = Original;
   pt->piece_head->offset = 0;
   pt->piece_head->len = text_len;
   pt->piece_head->next = NULL;
+
 
   return pt;
 }
@@ -119,14 +122,15 @@ PieceTable * pt_init(char *text, int add_cap) {
     2. A new piece for the inserted text
     3. The remaining part of the original piece
   then frees the old piece
+
+  Also increments the content length
 */
 void pt_insert_text(PieceTable *pt, char *text, int insert_point) {
-  /* Ensures insertion point is legal (between 0 and total_len) */
+  /* Ensures insertion point is legal (between 0 and content_len) */
   /*TODO: this might be inefficient, maybe think about creating a setter functions
    * to set the total length? */
-  int total_len = pt_content_len(pt);
-  if (insert_point < 0 || insert_point > total_len) {
-    fprintf(stderr, "Error: Insertion point %d is out of bounds [0, %d]\n", insert_point, total_len);
+  if (insert_point < 0 || insert_point > pt->content_len) {
+    fprintf(stderr, "Error: Insertion point %d is out of bounds [0, %d]\n", insert_point, pt->content_len);
     return;
   }
   /* we need to figure out what the offset is in the add buffer before we append to the add buffer */
@@ -146,8 +150,12 @@ void pt_insert_text(PieceTable *pt, char *text, int insert_point) {
     if (curr->next == NULL && insert_point >= running_len + curr->len) {
       /* Append at the end of the file */
       int local_insert = curr->len;
+
       //printf("End of file, local_insert = %d\n", local_insert);
       insert_piece(pt, curr, prev, local_insert, text, add_offset);
+
+      /* Increments the content length */
+      pt->content_len += strlen(text);
 
       return;
     }
@@ -155,8 +163,13 @@ void pt_insert_text(PieceTable *pt, char *text, int insert_point) {
       /* Append in middle of file */
       //printf("\ninserting text into piece %d\n", count);
       int local_insert = insert_point - running_len;
+
       //printf("local_insert=%d\n", local_insert);
       insert_piece(pt, curr, prev, local_insert, text, add_offset);
+
+      /* Increments the content length */
+      pt->content_len += strlen(text);
+
       return;
     }
 
@@ -177,8 +190,7 @@ void pt_insert_char(PieceTable *pt, char c, int index) {
 char *pt_get_content(PieceTable *pt) {
   Piece *curr = pt->piece_head;
   // Calculate total length
-  int total_len = pt_content_len(pt); 
-  char *result = safe_malloc(total_len + 1);
+  char *result = safe_malloc(pt->content_len + 1);
   int result_pos = 0;
 
   /* Combine all substrings of pieces */
@@ -196,7 +208,7 @@ char *pt_get_content(PieceTable *pt) {
     curr = curr->next;
     count ++;
   }
-  result[total_len] = '\0';
+  result[pt->content_len] = '\0';
   return result;
 }
 
@@ -222,8 +234,7 @@ void pt_print(PieceTable *pt) {
   int index = 0;
   while (curr != NULL) {
     const char *type_str = curr->type == Original ? "Original" : "Added";
-    printf("Piece %d: [%s | offset=%d | len=%d] -> \"", index, type_str, curr->offset, curr->len);
-    
+    printf("Piece %d: [%s | offset=%d | len=%d] -> \n\"", index, type_str, curr->offset, curr->len);
     // Print actual text content of the piece
     for (int i = 0; i < curr->len; i++) {
       char ch = (curr->type == Original) ? pt->original[curr->offset + i] : pt->add[curr->offset + i];
@@ -235,8 +246,15 @@ void pt_print(PieceTable *pt) {
     index++;
   }
   printf("--- END ---\n\n");
+  printf("--- ORIGINAL BUFFER --- \n");
+  printf("%s\n", pt->original);
+  printf("--- ADDED BUFFER --- \n");
+  printf("%s\n", pt->add);
+  printf("\n\n");
+  printf("\n\n");
 }
 
+/*
 int pt_content_len(PieceTable *pt) {
   int result = 0;
   Piece *curr = pt->piece_head;
@@ -246,6 +264,7 @@ int pt_content_len(PieceTable *pt) {
   }
   return result;
 }
+*/
 
 char pt_get_char_at(PieceTable *pt, int i) {
   Piece *curr = pt->piece_head;
@@ -263,8 +282,7 @@ char pt_get_char_at(PieceTable *pt, int i) {
     curr = curr->next;
   }
   /* Didn't return anything */  
-  int total_len = pt_content_len(pt);
-  fprintf(stderr, "Error: Insertion point %d is out of bounds [0, %d]\n", i, total_len);
+  fprintf(stderr, "Error: Insertion point %d is out of bounds [0, %d]\n", i, pt->content_len);
 
   return '\0';
 }

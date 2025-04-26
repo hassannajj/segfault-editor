@@ -144,8 +144,7 @@ void test_add_cap_insert(void) {
 void test_len_init(void) {
   PieceTable *pt = pt_init("Hello", INITIAL_ADD_CAP);
   char *result = pt_get_content(pt);
-  int len = pt_content_len(pt);
-  TEST_ASSERT_EQUAL_INT(5, len);
+  TEST_ASSERT_EQUAL_INT(5, pt->content_len);
   pt_cleanup(pt);
   free(result);
 }
@@ -154,8 +153,7 @@ void test_len_insert(void) {
   PieceTable *pt = pt_init("Hello World", INITIAL_ADD_CAP);
   pt_insert_text(pt, " cool ", 5);
   char *result = pt_get_content(pt);
-  int len = pt_content_len(pt);
-  TEST_ASSERT_EQUAL_INT(17, len);
+  TEST_ASSERT_EQUAL_INT(17, pt->content_len);
   pt_cleanup(pt);
   free(result);
 }
@@ -225,13 +223,14 @@ void test_complex_edit_sequence(void) {
   pt_insert_text(pt, " in C", 18);   // "I love Programming in C"
 
   // Insert at end
-  pt_insert_text(pt, "!", pt_content_len(pt));  // "I love Programming in C!"
+  pt_insert_text(pt, "!", pt->content_len); // "I love Programming in C!"
 
   // Insert in the middle again
   pt_insert_text(pt, " and Python", 23);  // "I love Programming in C and Python!"
 
   // Insert more at the beginning
   pt_insert_text(pt, "Honestly, ", 0);  // "Honestly, I love Programming in C and Python!"
+  printf("content_len: %d", pt->content_len);
   
   char *result = pt_get_content(pt);
   TEST_ASSERT_EQUAL_STRING("Honestly, I love Programming in C and Python!", result);
@@ -241,7 +240,7 @@ void test_complex_edit_sequence(void) {
   // - 5 pieces for each insertion (unless adjacent inserts are coalesced)
   TEST_ASSERT_TRUE(pt->piece_count >= 6);  // Minimum 6 pieces unless optimized
 
-  TEST_ASSERT_EQUAL_INT(45, pt_content_len(pt));
+  TEST_ASSERT_EQUAL_INT(45, pt->content_len);
 
 
   pt_cleanup(pt);
