@@ -247,6 +247,65 @@ void test_complex_edit_sequence(void) {
   free(result);
 }
 
+void test_line_starts_init(void) {
+  const char *text = "line1\nline2\nline3";
+  PieceTable *pt = pt_init((char *)text, INITIAL_ADD_CAP);
+
+  TEST_ASSERT_EQUAL_INT(3, pt->num_lines);  // 3 lines total
+  TEST_ASSERT_EQUAL_INT(0, pt->line_starts[0]);   // line1
+  TEST_ASSERT_EQUAL_INT(6, pt->line_starts[1]);   // line2 starts after '\n'
+  TEST_ASSERT_EQUAL_INT(12, pt->line_starts[2]);  // line3
+
+  pt_cleanup(pt);
+}
+
+void test_line_starts_after_insert_newline(void) {
+  PieceTable *pt = pt_init("Hello\nWorld", INITIAL_ADD_CAP);
+  pt_insert_text(pt, "\nNewLine", 5);  // insert newline in middle of line 0
+
+  TEST_ASSERT_TRUE(pt->num_lines == 3);  // should now have at least 3 lines
+
+  char *result = pt_get_content(pt);
+  TEST_ASSERT_EQUAL_STRING("Hello\nNewLine\nWorld", result);
+
+  // Line starts:
+  TEST_ASSERT_EQUAL_INT(0, pt->line_starts[0]);        // "Hello"
+  TEST_ASSERT_EQUAL_INT(6, pt->line_starts[1]);        // "\nNewLine"
+  TEST_ASSERT_EQUAL_INT(14, pt->line_starts[2]);       // "\nWorld"
+
+  pt_cleanup(pt);
+  free(result);
+}
+
+void test_line_starts_with_no_newlines(void) {
+  PieceTable *pt = pt_init("SingleLine", INITIAL_ADD_CAP);
+  TEST_ASSERT_EQUAL_INT(1, pt->num_lines);
+  TEST_ASSERT_EQUAL_INT(0, pt->line_starts[0]);
+
+  pt_cleanup(pt);
+}
+
+void test_line_starts_expand_cap(void) {
+  // Force line_starts to grow
+  char big_text[2048];
+  int count = 0;
+  for (long unsigned int i = 0; i < sizeof(big_text) - 2; i++) {
+    big_text[i] = (i % 10 == 9) ? '\n' : 'a';  // every 10th char is newline
+    if (big_text[i] == '\n') count++;
+  }
+  big_text[sizeof(big_text) - 2] = 'Z';
+  big_text[sizeof(big_text) - 1] = '\0';
+
+  PieceTable *pt = pt_init("", INITIAL_ADD_CAP);
+  pt_insert_text(pt, big_text, 0);
+  pt_insert_text(pt, "hello", 1000);
+  pt_print(pt);
+
+  TEST_ASSERT_TRUE(pt->num_lines >= count + 1);
+  TEST_ASSERT_TRUE(pt->num_lines_cap >= pt->num_lines);
+
+  pt_cleanup(pt);
+}
 
 int main(void) {
   UNITY_BEGIN();
@@ -285,6 +344,12 @@ int main(void) {
 
   // Complex
   RUN_TEST(test_complex_edit_sequence); 
+
+  // Line starts arr
+  RUN_TEST(test_line_starts_init);
+  RUN_TEST(test_line_starts_after_insert_newline);
+  RUN_TEST(test_line_starts_with_no_newlines);
+  RUN_TEST(test_line_starts_expand_cap);
 
   return UNITY_END();
 }

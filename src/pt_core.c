@@ -11,9 +11,16 @@ static void ensure_add_capacity(PieceTable *pt, int required) {
   /* Contanates to add buffer, ensures there is enough space allocated (reallocs if not) */
   while (pt->add_len + required >= pt->add_cap) {
     /* Realloc add buffer */ 
-    pt->add_cap = pt->add_cap * 2;
+    pt->add_cap *= 2;
     pt->add = safe_realloc(pt->add, pt->add_cap);
   }
+}
+
+static void expand_num_lines_cap(PieceTable *pt) {
+  printf("expand_num_lines_cap() called\ncap: %d\nnum_lines: %d\n", pt->num_lines_cap, pt->num_lines);
+  /* Realloc line_starts arr */ 
+  pt->num_lines_cap *= 2; 
+  pt->line_starts = safe_realloc(pt->line_starts, sizeof(unsigned int) * pt->num_lines_cap);
 }
 
 
@@ -71,8 +78,20 @@ static void insert_piece(PieceTable *pt, Piece *curr, Piece *prev, int local_ins
   pt->piece_count += (left ? 1 : 0) + (right ? 1 : 0);
 }
 
-
-
+/* TODO: add a outdated_start_line_index
+ */
+void reset_line_starts(PieceTable *pt, char *text, int len) {
+    pt->line_starts[0] = 0;
+    pt->num_lines = 1;
+    for (int i = 0; i < len; i++) {
+        if (text[i] == '\n') {
+            if (pt->num_lines >= pt->num_lines_cap) {
+                expand_num_lines_cap(pt);
+            }
+            pt->line_starts[pt->num_lines++] = i + 1;
+        }
+    }
+}
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -104,7 +123,17 @@ PieceTable * pt_init(char *text, int add_cap) {
   pt->piece_head->len = text_len;
   pt->piece_head->next = NULL;
 
-
+  
+  // lines
+  int initial_num_lines = 1;
+  for (size_t i = 0; i < text_len; i++) {
+    if (text[i] == '\n') initial_num_lines++;
+  }
+  
+  pt->line_starts = safe_malloc(sizeof(unsigned int) * initial_num_lines);
+  pt->num_lines = initial_num_lines;
+  pt->num_lines_cap = initial_num_lines;
+  reset_line_starts(pt, text, text_len);
   return pt;
 }
 
@@ -145,40 +174,39 @@ void pt_insert_text(PieceTable *pt, char *text, int insert_point) {
   Piece *prev = NULL;
 
   int count = 0;
+  int local_insert = -1;
   while (curr != NULL) {
 
     if (curr->next == NULL && insert_point >= running_len + curr->len) {
       /* Append at the end of the file */
-      int local_insert = curr->len;
-
-      //printf("End of file, local_insert = %d\n", local_insert);
-      insert_piece(pt, curr, prev, local_insert, text, add_offset);
-
-      /* Increments the content length */
-      pt->content_len += strlen(text);
-
-      return;
+      local_insert = curr->len;
+      break;
     }
     else if (insert_point < running_len + curr->len) {
       /* Append in middle of file */
       //printf("\ninserting text into piece %d\n", count);
-      int local_insert = insert_point - running_len;
-
-      //printf("local_insert=%d\n", local_insert);
-      insert_piece(pt, curr, prev, local_insert, text, add_offset);
-
-      /* Increments the content length */
-      pt->content_len += strlen(text);
-
-      return;
+      local_insert = insert_point - running_len;
+      break;
     }
-
-
     running_len += curr->len;
     prev = curr;
     curr = curr->next;
     count ++;
   } 
+  if (local_insert == -1) return;
+
+  /* Insert piece */
+  insert_piece(pt, curr, prev, local_insert, text, add_offset);
+
+  /* Increments the content length */
+  pt->content_len += strlen(text);
+  
+  /* Sets line starts arr */
+  char *content = pt_get_content(pt);
+  reset_line_starts(pt, content, pt->content_len);
+  free(content);
+
+  return;
 }
 
 void pt_insert_char(PieceTable *pt, char c, int index) {
@@ -225,6 +253,7 @@ void pt_cleanup(PieceTable *pt) {
   }
   free(pt->original);
   free(pt->add);
+  free(pt->line_starts);
   free(pt);
 }
 
@@ -251,6 +280,13 @@ void pt_print(PieceTable *pt) {
   printf("--- ADDED BUFFER --- \n");
   printf("%s\n", pt->add);
   printf("\n\n");
+
+  printf("--- line starts --- \n");
+  for (int i=0; i < pt->num_lines; i++) {
+    printf("Line start %d: %d\n", i, pt->line_starts[i]);
+  }
+  printf("\n\n");
+
   printf("\n\n");
 }
 
