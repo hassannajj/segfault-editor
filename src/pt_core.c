@@ -80,7 +80,7 @@ static void insert_piece(PieceTable *pt, Piece *curr, Piece *prev, int local_ins
 
 /* TODO: add a outdated_start_line_index
  */
-void reset_line_starts(PieceTable *pt) {
+void reset_lines(PieceTable *pt) {
     pt->line_starts[0] = 0;
     pt->num_lines = 1;
     for (int i = 0; i < pt->content_len; i++) {
@@ -92,7 +92,19 @@ void reset_line_starts(PieceTable *pt) {
         }
     }
 }
+
+/*
+ * TODO: When accessing an outdated line, update the line_start arr first
+  */
+static int get_ith_line_start(PieceTable *pt, int i) {
+  if (i < 0 || i >= pt->num_lines) {
+    fprintf(stderr, "Error: Line index %d is out of bounds [0, %d]\n", i, pt->num_lines);
+  } 
+  return pt->line_starts[i];
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
+///
 
 
 
@@ -133,7 +145,9 @@ PieceTable * pt_init(char *text, int add_cap) {
   pt->line_starts = safe_malloc(sizeof(unsigned int) * initial_num_lines);
   pt->num_lines = initial_num_lines;
   pt->num_lines_cap = initial_num_lines;
-  reset_line_starts(pt);
+
+  /* since inserting text can shift the indices of where lines start, we reset the line starts */
+  reset_lines(pt); // This is unoptimal for now, because it resets lines that haven't changed
   return pt;
 }
 
@@ -202,7 +216,7 @@ void pt_insert_text(PieceTable *pt, char *text, int insert_point) {
   pt->content_len += strlen(text);
   
   /* Sets line starts arr */
-  reset_line_starts(pt);
+  reset_lines(pt);
 
   return;
 }
@@ -300,7 +314,14 @@ int pt_content_len(PieceTable *pt) {
 }
 */
 
+
+
 char pt_get_char_at(PieceTable *pt, int i) {
+  if (i < 0 || i >= pt->content_len) {
+    fprintf(stderr, "Error: Point %d is out of bounds [0, %d]\n", i, pt->content_len);
+    return '\0';
+  } 
+
   Piece *curr = pt->piece_head;
   int running_len = 0;
   while (curr) {
@@ -316,8 +337,33 @@ char pt_get_char_at(PieceTable *pt, int i) {
     curr = curr->next;
   }
   /* Didn't return anything */  
-  fprintf(stderr, "Error: Insertion point %d is out of bounds [0, %d]\n", i, pt->content_len);
-
+  fprintf(stderr, "Error: Point %d is out of bounds [0, %d]\n", i, pt->content_len);
   return '\0';
 }
 
+/*
+* Y corresponds to line number
+*/
+int pt_line_len(PieceTable *pt, int y) {
+  if (y == pt->num_lines-1) {
+    // Last line
+    return pt->content_len - get_ith_line_start(pt, y); 
+  }
+  return get_ith_line_start(pt, y+1) - get_ith_line_start(pt, y);
+}
+
+
+/* 
+* This returns the char at line y, cursor x
+* Y corresponds to line number
+* X corresponds to horizontal cursor
+*/
+char pt_get_char_at_YX(PieceTable *pt, int y, int x) {
+  int line_start = get_ith_line_start(pt, y);
+  if (x < 0 || x >= pt_line_len(pt, y)) {
+    // Cursor is out of bounds
+    fprintf(stderr, "Error: Cursor %d is out of bounds [0, %d]\n", x, pt_line_len(pt, y));
+    return '\0';
+  }
+  return pt_get_char_at(pt, line_start + x);
+}

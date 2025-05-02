@@ -20,6 +20,10 @@ int main() {
   printf("\n\nCONTENT: \n%s\n", content);
   printf("pieces count: %d\n", pt->piece_count);
 
+  int y = 1;
+  int x = 5;
+  printf("get char at Y:%d, X:%d -> %c\n", y, x, pt_get_char_at_YX(pt, y, x));
+
   pt_cleanup(pt);
   free(content);
 
