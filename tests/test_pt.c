@@ -299,11 +299,11 @@ void test_line_starts_expand_cap(void) {
   PieceTable *pt = pt_init("", INITIAL_ADD_CAP);
   pt_insert_text(pt, big_text, 0);
   pt_insert_text(pt, "hello", 1000);
-  pt_print(pt);
 
   TEST_ASSERT_TRUE(pt->num_lines >= count + 1);
+  TEST_ASSERT_TRUE(pt->line_starts[100] == 1000);
+  TEST_ASSERT_TRUE(pt->line_starts[101] == 1015);
   TEST_ASSERT_TRUE(pt->num_lines_cap >= pt->num_lines);
-
   pt_cleanup(pt);
 }
 

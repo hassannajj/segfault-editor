@@ -80,11 +80,11 @@ static void insert_piece(PieceTable *pt, Piece *curr, Piece *prev, int local_ins
 
 /* TODO: add a outdated_start_line_index
  */
-void reset_line_starts(PieceTable *pt, char *text, int len) {
+void reset_line_starts(PieceTable *pt) {
     pt->line_starts[0] = 0;
     pt->num_lines = 1;
-    for (int i = 0; i < len; i++) {
-        if (text[i] == '\n') {
+    for (int i = 0; i < pt->content_len; i++) {
+        if (pt_get_char_at(pt, i) == '\n') {
             if (pt->num_lines >= pt->num_lines_cap) {
                 expand_num_lines_cap(pt);
             }
@@ -133,7 +133,7 @@ PieceTable * pt_init(char *text, int add_cap) {
   pt->line_starts = safe_malloc(sizeof(unsigned int) * initial_num_lines);
   pt->num_lines = initial_num_lines;
   pt->num_lines_cap = initial_num_lines;
-  reset_line_starts(pt, text, text_len);
+  reset_line_starts(pt);
   return pt;
 }
 
@@ -202,9 +202,7 @@ void pt_insert_text(PieceTable *pt, char *text, int insert_point) {
   pt->content_len += strlen(text);
   
   /* Sets line starts arr */
-  char *content = pt_get_content(pt);
-  reset_line_starts(pt, content, pt->content_len);
-  free(content);
+  reset_line_starts(pt);
 
   return;
 }
