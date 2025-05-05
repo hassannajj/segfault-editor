@@ -25,7 +25,7 @@ typedef struct {
   Piece *piece_head;
   int piece_count;
   int content_len; // Number of chars in the content of pieces
-                   //
+                   
   char *original; // original buffer
   char *add; // add buffer
   int add_len;
@@ -75,7 +75,12 @@ void pt_print(PieceTable *pt);
 
 
 /* Gets character at a specific RAW index */
-char pt_get_char_at(PieceTable *pt, int i);
+char pt_get_char_at_i(PieceTable *pt, int i);
 
+/* Gets character using line and cursor index */
+char pt_get_char_at_YX(PieceTable *pt, int y, int x);
+
+/* Gets length of specific line */
+int pt_line_len(PieceTable *pt, int y);
 
 #endif

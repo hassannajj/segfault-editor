@@ -13,7 +13,7 @@ int main() {
   pt_insert_text(pt, "cool\n", 6);
   pt_print(pt);
   int i = 3;
-  printf("index %d: %c", i, pt_get_char_at(pt, i));
+  printf("index %d: %c", i, pt_get_char_at_i(pt, i));
 
   char *content = pt_get_content(pt);
 

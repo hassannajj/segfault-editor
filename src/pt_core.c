@@ -84,7 +84,7 @@ void reset_lines(PieceTable *pt) {
     pt->line_starts[0] = 0;
     pt->num_lines = 1;
     for (int i = 0; i < pt->content_len; i++) {
-        if (pt_get_char_at(pt, i) == '\n') {
+        if (pt_get_char_at_i(pt, i) == '\n') {
             if (pt->num_lines >= pt->num_lines_cap) {
                 expand_num_lines_cap(pt);
             }
@@ -96,7 +96,7 @@ void reset_lines(PieceTable *pt) {
 /*
  * TODO: When accessing an outdated line, update the line_start arr first
   */
-static int get_ith_line_start(PieceTable *pt, int i) {
+static int line_start_index(PieceTable *pt, int i) {
   if (i < 0 || i >= pt->num_lines) {
     fprintf(stderr, "Error: Line index %d is out of bounds [0, %d]\n", i, pt->num_lines);
   } 
@@ -105,8 +105,6 @@ static int get_ith_line_start(PieceTable *pt, int i) {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///
-
-
 
 /* PUBLIC piece table functions */
 
@@ -302,21 +300,8 @@ void pt_print(PieceTable *pt) {
   printf("\n\n");
 }
 
-/*
-int pt_content_len(PieceTable *pt) {
-  int result = 0;
-  Piece *curr = pt->piece_head;
-  while (curr) {
-    result += curr->len;
-    curr = curr->next;
-  }
-  return result;
-}
-*/
 
-
-
-char pt_get_char_at(PieceTable *pt, int i) {
+char pt_get_char_at_i(PieceTable *pt, int i) {
   if (i < 0 || i >= pt->content_len) {
     fprintf(stderr, "Error: Point %d is out of bounds [0, %d]\n", i, pt->content_len);
     return '\0';
@@ -347,9 +332,9 @@ char pt_get_char_at(PieceTable *pt, int i) {
 int pt_line_len(PieceTable *pt, int y) {
   if (y == pt->num_lines-1) {
     // Last line
-    return pt->content_len - get_ith_line_start(pt, y); 
+    return pt->content_len - line_start_index(pt, y); 
   }
-  return get_ith_line_start(pt, y+1) - get_ith_line_start(pt, y);
+  return line_start_index(pt, y+1) - line_start_index(pt, y);
 }
 
 
@@ -359,11 +344,16 @@ int pt_line_len(PieceTable *pt, int y) {
 * X corresponds to horizontal cursor
 */
 char pt_get_char_at_YX(PieceTable *pt, int y, int x) {
-  int line_start = get_ith_line_start(pt, y);
+  if (y < 0 || y >= pt->num_lines) {
+    // Line is out of bounds
+    fprintf(stderr, "Error: Line %d is out of bounds [0, %d]\n", y, pt->num_lines); 
+  }
   if (x < 0 || x >= pt_line_len(pt, y)) {
     // Cursor is out of bounds
     fprintf(stderr, "Error: Cursor %d is out of bounds [0, %d]\n", x, pt_line_len(pt, y));
     return '\0';
   }
-  return pt_get_char_at(pt, line_start + x);
+  int line_start = line_start_index(pt, y);
+
+  return pt_get_char_at_i(pt, line_start + x);
 }

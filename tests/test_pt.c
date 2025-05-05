@@ -163,8 +163,8 @@ void test_pt_get_char_at_single_insert(void) {
 
   pt_insert_char(pt, 'H', 0);  // Insert 'H' at beginning
 
-  TEST_ASSERT_EQUAL_CHAR('H', pt_get_char_at(pt, 0));
-  TEST_ASSERT_EQUAL_CHAR('\0', pt_get_char_at(pt, 1)); // Out of bounds
+  TEST_ASSERT_EQUAL_CHAR('H', pt_get_char_at_i(pt, 0));
+  TEST_ASSERT_EQUAL_CHAR('\0', pt_get_char_at_i(pt, 1)); // Out of bounds
   
   pt_cleanup(pt);
 }
@@ -176,10 +176,10 @@ void test_pt_get_char_at_multiple_insert(void) {
   pt_insert_char(pt, 'E', 1);
   pt_insert_char(pt, 'Y', 2);
 
-  TEST_ASSERT_EQUAL_CHAR('H', pt_get_char_at(pt, 0));
-  TEST_ASSERT_EQUAL_CHAR('E', pt_get_char_at(pt, 1));
-  TEST_ASSERT_EQUAL_CHAR('Y', pt_get_char_at(pt, 2));
-  TEST_ASSERT_EQUAL_CHAR('\0', pt_get_char_at(pt, 3)); // Beyond content
+  TEST_ASSERT_EQUAL_CHAR('H', pt_get_char_at_i(pt, 0));
+  TEST_ASSERT_EQUAL_CHAR('E', pt_get_char_at_i(pt, 1));
+  TEST_ASSERT_EQUAL_CHAR('Y', pt_get_char_at_i(pt, 2));
+  TEST_ASSERT_EQUAL_CHAR('\0', pt_get_char_at_i(pt, 3)); // Beyond content
   
   pt_cleanup(pt);
 }
@@ -188,25 +188,25 @@ void test_pt_get_char_at_with_initial_text_and_insert(void) {
   PieceTable *pt = pt_init("Goodbye", INITIAL_ADD_CAP);
 
   // Initial assertions from original buffer
-  TEST_ASSERT_EQUAL_CHAR('G', pt_get_char_at(pt, 0));
-  TEST_ASSERT_EQUAL_CHAR('o', pt_get_char_at(pt, 1));
-  TEST_ASSERT_EQUAL_CHAR('o', pt_get_char_at(pt, 2));
-  TEST_ASSERT_EQUAL_CHAR('d', pt_get_char_at(pt, 3));
-  TEST_ASSERT_EQUAL_CHAR('b', pt_get_char_at(pt, 4));  // this will shift after insert
+  TEST_ASSERT_EQUAL_CHAR('G', pt_get_char_at_i(pt, 0));
+  TEST_ASSERT_EQUAL_CHAR('o', pt_get_char_at_i(pt, 1));
+  TEST_ASSERT_EQUAL_CHAR('o', pt_get_char_at_i(pt, 2));
+  TEST_ASSERT_EQUAL_CHAR('d', pt_get_char_at_i(pt, 3));
+  TEST_ASSERT_EQUAL_CHAR('b', pt_get_char_at_i(pt, 4));  // this will shift after insert
 
   // Insert 'X' between 'd' and 'b'
   pt_insert_char(pt, 'X', 4);
 
   // Validate post-insert buffer: "GoodXbye"
-  TEST_ASSERT_EQUAL_CHAR('G', pt_get_char_at(pt, 0));
-  TEST_ASSERT_EQUAL_CHAR('o', pt_get_char_at(pt, 1));
-  TEST_ASSERT_EQUAL_CHAR('o', pt_get_char_at(pt, 2));
-  TEST_ASSERT_EQUAL_CHAR('d', pt_get_char_at(pt, 3));
-  TEST_ASSERT_EQUAL_CHAR('X', pt_get_char_at(pt, 4));
-  TEST_ASSERT_EQUAL_CHAR('b', pt_get_char_at(pt, 5));
-  TEST_ASSERT_EQUAL_CHAR('y', pt_get_char_at(pt, 6));
-  TEST_ASSERT_EQUAL_CHAR('e', pt_get_char_at(pt, 7));
-  TEST_ASSERT_EQUAL_CHAR('\0', pt_get_char_at(pt, 8));  // Out of bounds
+  TEST_ASSERT_EQUAL_CHAR('G', pt_get_char_at_i(pt, 0));
+  TEST_ASSERT_EQUAL_CHAR('o', pt_get_char_at_i(pt, 1));
+  TEST_ASSERT_EQUAL_CHAR('o', pt_get_char_at_i(pt, 2));
+  TEST_ASSERT_EQUAL_CHAR('d', pt_get_char_at_i(pt, 3));
+  TEST_ASSERT_EQUAL_CHAR('X', pt_get_char_at_i(pt, 4));
+  TEST_ASSERT_EQUAL_CHAR('b', pt_get_char_at_i(pt, 5));
+  TEST_ASSERT_EQUAL_CHAR('y', pt_get_char_at_i(pt, 6));
+  TEST_ASSERT_EQUAL_CHAR('e', pt_get_char_at_i(pt, 7));
+  TEST_ASSERT_EQUAL_CHAR('\0', pt_get_char_at_i(pt, 8));  // Out of bounds
 
   pt_cleanup(pt);
 
@@ -307,6 +307,134 @@ void test_line_starts_expand_cap(void) {
   pt_cleanup(pt);
 }
 
+void test_get_char_at_YX_basic_access(void) {
+  PieceTable *pt = pt_init("abc\ndef\nghi", INITIAL_ADD_CAP);
+  TEST_ASSERT_EQUAL_CHAR('a', pt_get_char_at_YX(pt, 0, 0));
+  TEST_ASSERT_EQUAL_CHAR('f', pt_get_char_at_YX(pt, 1, 2));
+  TEST_ASSERT_EQUAL_CHAR('d', pt_get_char_at_YX(pt, 1, 0));
+  TEST_ASSERT_EQUAL_CHAR('i', pt_get_char_at_YX(pt, 2, 2));
+  pt_cleanup(pt);
+}
+
+void test_get_char_at_YX_out_of_bounds(void) {
+  PieceTable *pt = pt_init("abc\ndef\nghi", INITIAL_ADD_CAP);
+  // Valid access for comparison
+  TEST_ASSERT_EQUAL_CHAR('a', pt_get_char_at_YX(pt, 0, 0));
+
+  // x < 0
+  TEST_ASSERT_EQUAL_CHAR('\0', pt_get_char_at_YX(pt, 0, -1));
+
+  // x == line length (line 0 is "abc\n", len = 3, so it should return \n)
+  TEST_ASSERT_EQUAL_CHAR('\n', pt_get_char_at_YX(pt, 0, 3));
+
+  // x > line length (line 0 is "abc\n", len = 4)
+  TEST_ASSERT_EQUAL_CHAR('\0', pt_get_char_at_YX(pt, 0, 4));
+
+  // y < 0
+  TEST_ASSERT_EQUAL_CHAR('\0', pt_get_char_at_YX(pt, -1, 0));
+
+  // y >= num_lines
+  TEST_ASSERT_EQUAL_CHAR('\0', pt_get_char_at_YX(pt, pt->num_lines, 0));
+
+  // Empty line test (middle line is empty)
+  PieceTable *pt2 = pt_init("line1\n\nline3", INITIAL_ADD_CAP);
+  TEST_ASSERT_EQUAL_CHAR('\0', pt_get_char_at_YX(pt2, 1, 1));  // line 1 is empty
+  pt_cleanup(pt);
+  pt_cleanup(pt2);
+}
+
+void test_get_char_at_YX_after_insert(void) {
+  PieceTable *pt = pt_init("foo\nbar\nbaz", INITIAL_ADD_CAP);
+  // Initial check
+  TEST_ASSERT_EQUAL_CHAR('b', pt_get_char_at_YX(pt, 1, 0)); // line 1 = "bar"
+  // Insert a newline in the middle of "bar"
+  pt_insert_text(pt, "\n", 5); // "foo\nb\nar\nbaz"
+  // Now expect: 
+  // line 0: "foo"
+  // line 1: "b"
+  // line 2: "ar"
+  // line 3: "baz"
+
+  TEST_ASSERT_EQUAL_CHAR('b', pt_get_char_at_YX(pt, 1, 0));
+  TEST_ASSERT_EQUAL_CHAR('a', pt_get_char_at_YX(pt, 2, 0));
+  TEST_ASSERT_EQUAL_CHAR('z', pt_get_char_at_YX(pt, 3, 2));
+  pt_cleanup(pt);
+}
+
+void test_get_char_at_YX_edge_cases(void) {
+// Starts with newline
+  PieceTable *pt1 = pt_init("\nHello", INITIAL_ADD_CAP);
+  TEST_ASSERT_EQUAL_CHAR('\n', pt_get_char_at_YX(pt1, 0, 0));
+  TEST_ASSERT_EQUAL_CHAR('H', pt_get_char_at_YX(pt1, 1, 0));
+  pt_cleanup(pt1);
+
+  // File ends without newline
+  PieceTable *pt2 = pt_init("LastLineNoNewline", INITIAL_ADD_CAP);
+
+  TEST_ASSERT_EQUAL_CHAR('L', pt_get_char_at_YX(pt2, 0, 0));
+  TEST_ASSERT_EQUAL_CHAR('e', pt_get_char_at_YX(pt2, 0, 16));
+  TEST_ASSERT_EQUAL_CHAR('\0', pt_get_char_at_YX(pt2, 0, 17));
+  TEST_ASSERT_EQUAL_CHAR('\0', pt_get_char_at_YX(pt2, 0, 100));  // Way too far
+  pt_cleanup(pt2);
+
+  // Only newlines
+  PieceTable *pt3 = pt_init("\n\n\n", INITIAL_ADD_CAP);
+  TEST_ASSERT_EQUAL_CHAR('\n', pt_get_char_at_YX(pt3, 0, 0));
+  TEST_ASSERT_EQUAL_CHAR('\n', pt_get_char_at_YX(pt3, 1, 0));
+  TEST_ASSERT_EQUAL_CHAR('\n', pt_get_char_at_YX(pt3, 2, 0));
+  TEST_ASSERT_EQUAL_CHAR('\0', pt_get_char_at_YX(pt3, 2, 1));  // Beyond line end
+  pt_cleanup(pt3);
+
+  // Single line no newline
+  PieceTable *pt4 = pt_init("SoloLine", INITIAL_ADD_CAP);
+  TEST_ASSERT_EQUAL_CHAR('S', pt_get_char_at_YX(pt4, 0, 0));
+  TEST_ASSERT_EQUAL_CHAR('\0', pt_get_char_at_YX(pt4, 0, 20));
+  pt_cleanup(pt4);
+}
+
+void test_pt_line_len_various_layouts(void) {
+  // "abc\n" (4), "defg\n" (5), "hi" (2)
+  PieceTable *pt1 = pt_init("abc\ndefg\nhi", INITIAL_ADD_CAP);
+  TEST_ASSERT_EQUAL_INT(4, pt_line_len(pt1, 0));
+  TEST_ASSERT_EQUAL_INT(5, pt_line_len(pt1, 1));
+  TEST_ASSERT_EQUAL_INT(2, pt_line_len(pt1, 2));
+  pt_cleanup(pt1);
+
+  // Single line
+  PieceTable *pt2 = pt_init("SoloLine", INITIAL_ADD_CAP);
+  TEST_ASSERT_EQUAL_INT(8, pt_line_len(pt2, 0));
+  pt_cleanup(pt2);
+
+  // Only newlines
+  PieceTable *pt3 = pt_init("\n\n\n", INITIAL_ADD_CAP);
+  TEST_ASSERT_EQUAL_INT(1, pt_line_len(pt3, 0));
+  TEST_ASSERT_EQUAL_INT(1, pt_line_len(pt3, 1));
+  TEST_ASSERT_EQUAL_INT(1, pt_line_len(pt3, 2)); 
+  TEST_ASSERT_EQUAL_INT(0, pt_line_len(pt3, 3));  // last line: empty
+  
+  pt_cleanup(pt3);
+}
+
+void test_pt_line_len_after_insert(void) {
+  PieceTable *pt = pt_init("Hello\nWorld", INITIAL_ADD_CAP);
+  // "Hello\n" (6), "World" (5)
+  TEST_ASSERT_EQUAL_INT(6, pt_line_len(pt, 0));
+  TEST_ASSERT_EQUAL_INT(5, pt_line_len(pt, 1));
+
+  pt_insert_text(pt, "\n!", 5);  // Insert newline + "!" inside first line
+
+  // Now expect:
+  // "Hello\n" (5) → line 0
+  // "!" (2)   → line 1
+  // "World"     → line 2
+
+  TEST_ASSERT_EQUAL_INT(6, pt_line_len(pt, 0));
+  TEST_ASSERT_EQUAL_INT(1, pt_line_len(pt, 1));
+  TEST_ASSERT_EQUAL_INT(5, pt_line_len(pt, 2));
+
+  pt_cleanup(pt);
+}
+
 int main(void) {
   UNITY_BEGIN();
 
@@ -350,6 +478,15 @@ int main(void) {
   RUN_TEST(test_line_starts_after_insert_newline);
   RUN_TEST(test_line_starts_with_no_newlines);
   RUN_TEST(test_line_starts_expand_cap);
+
+  // Get char at YX
+  RUN_TEST(test_get_char_at_YX_basic_access);
+  RUN_TEST(test_get_char_at_YX_out_of_bounds);
+  RUN_TEST(test_get_char_at_YX_after_insert);
+  RUN_TEST(test_get_char_at_YX_edge_cases);
+
+  RUN_TEST(test_pt_line_len_various_layouts);
+  RUN_TEST(test_pt_line_len_after_insert);
 
   return UNITY_END();
 }
