@@ -472,7 +472,7 @@ void test_insert_text_at_YX_edge_cases(void) {
   PieceTable *pt2 = pt_init("Short", INITIAL_ADD_CAP);
 
   // Col too wide
-  pt_insert_char_at_YX(pt2, 'X', 0, 99);
+  pt_insert_char_at_YX(pt2, 'X', 0, 5);
   result = pt_get_content(pt2);
   TEST_ASSERT_EQUAL_STRING("Short", result);
   free(result);

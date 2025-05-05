@@ -4,8 +4,10 @@
 #include "pt_core.h"
 #include "input.h"
 
+
 #define INITIAL_ADD_CAP 1024
 
+//TODO: add some sort of variable that will track where the cursor should be 
 typedef struct {
     int x, y;
 } Cursor;
@@ -19,15 +21,19 @@ void move_left(Cursor *cursor) {
 
 void move_right(PieceTable *pt, Cursor *cursor) {
   /* check condition of right boundary using length of current line  */
-  if (cursor->x <= pt_line_width(pt, cursor->y)-1) {
+  if (cursor->x < pt_line_width(pt, cursor->y)-1) {
     cursor->x++;
     move(cursor->y, cursor->x);
   }
 }
 
-void move_up(Cursor *cursor) { 
+void move_up(PieceTable *pt, Cursor *cursor) { 
   if (cursor->y > 0) {
     cursor->y--;
+
+    if (cursor->x > pt_line_width(pt, cursor->y)-1) {
+      cursor->x = pt_line_width(pt, cursor->y) -1;
+    }
     move(cursor->y, cursor->x);
   }
 }
@@ -36,12 +42,17 @@ void move_down(PieceTable *pt, Cursor *cursor) {
   /* check condition of down boundary using number of lines */
   if (cursor->y < pt->num_lines-1) {
     cursor->y++;
+
+    if (cursor->x > pt_line_width(pt, cursor->y)-1) {
+      cursor->x = pt_line_width(pt, cursor->y) -1;
+    }
+
     move(cursor->y, cursor->x);
   }
 }
 
 void render_ncurses(PieceTable *pt) {
-  //clear();
+  clear();
   int y = 0;
   int x = 0;
 
@@ -102,7 +113,8 @@ int main() {
   }
 
   Cursor *cursor = malloc(sizeof(Cursor));
-  PieceTable *pt = pt_init("", INITIAL_ADD_CAP);
+  // When opening an empty file, always initialize with a single "\n" char
+  PieceTable *pt = pt_init("hello\nworld\n", INITIAL_ADD_CAP);
 
   cursor->x = 0;
   cursor->y = 0;
@@ -127,7 +139,7 @@ int main() {
         }
         break;
       case INPUT_ENTER_CHAR:
-        pt_insert_char(pt, '\n', cursor->x);
+        pt_insert_char_at_YX(pt, '\n', cursor->y, cursor->x);
         cursor->y++;
         cursor->x = 0;
         break;
@@ -139,7 +151,7 @@ int main() {
         move_right(pt, cursor);
         break;
       case INPUT_MOVE_UP:
-        move_up(cursor);
+        move_up(pt, cursor);
         break;
       case INPUT_MOVE_DOWN:
         move_down(pt, cursor);
@@ -147,7 +159,7 @@ int main() {
 
       case INPUT_INSERT_CHAR:
         // Enter a character into ncurses buffer
-        pt_insert_char(pt, c, cursor->x);
+        pt_insert_char_at_YX(pt, c, cursor->y, cursor->x);
         //mvaddch(cursor->y, cursor->x, c); // y set to 0 for now
         cursor->x++;
         break;
@@ -158,10 +170,10 @@ int main() {
         break;
     }
 
-    mvprintw(10, 0, "cursor y: %d, x: %d\nkey: %c, val: %d, \npt->content_len: %d", cursor->y, cursor->x, c, c, pt->content_len); /* DEBUG */
 
     /* Renders the text in piece table */
     render_ncurses(pt);
+    mvprintw(10, 0, "cursor y: %d, x: %d\nline_width: %d\nnum_lines: %d\nkey: %c, val: %d, \npt->content_len: %d", cursor->y, cursor->x, pt_line_width(pt, cursor->y), pt->num_lines, c, c, pt->content_len); /* DEBUG */
 
     /* Moves the cursor in the correct location */
     move(cursor->y, cursor->x); 

@@ -112,13 +112,13 @@ static int lineStarts_index(PieceTable *pt, int i) {
 bool isBoundsValid_YX(PieceTable *pt, int y, int x) {
   if (y < 0 || y >= pt->num_lines) {
     // Line is out of bounds
-    fprintf(stderr, "Error: Line %d is out of bounds [0, %d]\n", y, pt->num_lines); 
+    fprintf(stderr, "Error: Line %d is out of bounds [0, %d)\n", y, pt->num_lines); 
     return false;
   }
   int line_width = pt_line_width(pt, y);
   if (x < 0 || x >= line_width) {
     // Cursor is out of bounds
-    fprintf(stderr, "Error: Cursor %d is out of bounds [0, %d]\n", x, line_width);
+    fprintf(stderr, "Error: Cursor %d is out of bounds [0, %d)\n", x, line_width);
     return false;
   }
   return true;
@@ -127,7 +127,7 @@ bool isBoundsValid_YX(PieceTable *pt, int y, int x) {
 
 bool isBoundsValid_i(PieceTable *pt, int i) {
   if (i < 0 || i >= pt->content_len) {
-    fprintf(stderr, "Error: Raw point %d is out of bounds [0, %d]\n", i, pt->content_len);
+    fprintf(stderr, "Error: Raw point %d is out of bounds [0, %d)\n", i, pt->content_len);
     return false;
   } 
   return true;
