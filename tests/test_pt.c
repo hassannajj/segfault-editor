@@ -392,34 +392,34 @@ void test_get_char_at_YX_edge_cases(void) {
   pt_cleanup(pt4);
 }
 
-void test_pt_line_len_various_layouts(void) {
+void test_pt_line_width_various_layouts(void) {
   // "abc\n" (4), "defg\n" (5), "hi" (2)
   PieceTable *pt1 = pt_init("abc\ndefg\nhi", INITIAL_ADD_CAP);
-  TEST_ASSERT_EQUAL_INT(4, pt_line_len(pt1, 0));
-  TEST_ASSERT_EQUAL_INT(5, pt_line_len(pt1, 1));
-  TEST_ASSERT_EQUAL_INT(2, pt_line_len(pt1, 2));
+  TEST_ASSERT_EQUAL_INT(4, pt_line_width(pt1, 0));
+  TEST_ASSERT_EQUAL_INT(5, pt_line_width(pt1, 1));
+  TEST_ASSERT_EQUAL_INT(2, pt_line_width(pt1, 2));
   pt_cleanup(pt1);
 
   // Single line
   PieceTable *pt2 = pt_init("SoloLine", INITIAL_ADD_CAP);
-  TEST_ASSERT_EQUAL_INT(8, pt_line_len(pt2, 0));
+  TEST_ASSERT_EQUAL_INT(8, pt_line_width(pt2, 0));
   pt_cleanup(pt2);
 
   // Only newlines
   PieceTable *pt3 = pt_init("\n\n\n", INITIAL_ADD_CAP);
-  TEST_ASSERT_EQUAL_INT(1, pt_line_len(pt3, 0));
-  TEST_ASSERT_EQUAL_INT(1, pt_line_len(pt3, 1));
-  TEST_ASSERT_EQUAL_INT(1, pt_line_len(pt3, 2)); 
-  TEST_ASSERT_EQUAL_INT(0, pt_line_len(pt3, 3));  // last line: empty
+  TEST_ASSERT_EQUAL_INT(1, pt_line_width(pt3, 0));
+  TEST_ASSERT_EQUAL_INT(1, pt_line_width(pt3, 1));
+  TEST_ASSERT_EQUAL_INT(1, pt_line_width(pt3, 2)); 
+  TEST_ASSERT_EQUAL_INT(0, pt_line_width(pt3, 3));  // last line: empty
   
   pt_cleanup(pt3);
 }
 
-void test_pt_line_len_after_insert(void) {
+void test_pt_line_width_after_insert(void) {
   PieceTable *pt = pt_init("Hello\nWorld", INITIAL_ADD_CAP);
   // "Hello\n" (6), "World" (5)
-  TEST_ASSERT_EQUAL_INT(6, pt_line_len(pt, 0));
-  TEST_ASSERT_EQUAL_INT(5, pt_line_len(pt, 1));
+  TEST_ASSERT_EQUAL_INT(6, pt_line_width(pt, 0));
+  TEST_ASSERT_EQUAL_INT(5, pt_line_width(pt, 1));
 
   pt_insert_text(pt, "\n!", 5);  // Insert newline + "!" inside first line
 
@@ -428,9 +428,9 @@ void test_pt_line_len_after_insert(void) {
   // "!\n" (2)   → line 1
   // "World"     → line 2
 
-  TEST_ASSERT_EQUAL_INT(6, pt_line_len(pt, 0));
-  TEST_ASSERT_EQUAL_INT(2, pt_line_len(pt, 1));
-  TEST_ASSERT_EQUAL_INT(5, pt_line_len(pt, 2));
+  TEST_ASSERT_EQUAL_INT(6, pt_line_width(pt, 0));
+  TEST_ASSERT_EQUAL_INT(2, pt_line_width(pt, 1));
+  TEST_ASSERT_EQUAL_INT(5, pt_line_width(pt, 2));
 
   pt_cleanup(pt);
 }
@@ -489,7 +489,7 @@ void test_bounds_valid_yx() {
   
   // Edge case: last char of last line
   int last_line = pt->num_lines - 1;
-  TEST_ASSERT_TRUE(isBoundsValid_YX(pt, last_line, pt_line_len(pt, last_line) - 1));
+  TEST_ASSERT_TRUE(isBoundsValid_YX(pt, last_line, pt_line_width(pt, last_line) - 1));
   
   // Out-of-bounds Y
   TEST_ASSERT_FALSE(isBoundsValid_YX(pt, -1, 0));
@@ -497,7 +497,7 @@ void test_bounds_valid_yx() {
 
   // Out-of-bounds X
   TEST_ASSERT_FALSE(isBoundsValid_YX(pt, 0, -1));
-  TEST_ASSERT_FALSE(isBoundsValid_YX(pt, 0, pt_line_len(pt, 0)));
+  TEST_ASSERT_FALSE(isBoundsValid_YX(pt, 0, pt_line_width(pt, 0)));
 
   pt_cleanup(pt);
 }
@@ -570,8 +570,8 @@ int main(void) {
   RUN_TEST(test_get_char_at_YX_edge_cases);
   
   /* Line length */
-  RUN_TEST(test_pt_line_len_various_layouts);
-  RUN_TEST(test_pt_line_len_after_insert);
+  RUN_TEST(test_pt_line_width_various_layouts);
+  RUN_TEST(test_pt_line_width_after_insert);
   
   /* Insert Text/char at YX */
   RUN_TEST(test_insert_text_at_YX_basic_cases);

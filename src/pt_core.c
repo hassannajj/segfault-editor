@@ -115,10 +115,10 @@ bool isBoundsValid_YX(PieceTable *pt, int y, int x) {
     fprintf(stderr, "Error: Line %d is out of bounds [0, %d]\n", y, pt->num_lines); 
     return false;
   }
-  int line_len = pt_line_len(pt, y);
-  if (x < 0 || x >= line_len) {
+  int line_width = pt_line_width(pt, y);
+  if (x < 0 || x >= line_width) {
     // Cursor is out of bounds
-    fprintf(stderr, "Error: Cursor %d is out of bounds [0, %d]\n", x, line_len);
+    fprintf(stderr, "Error: Cursor %d is out of bounds [0, %d]\n", x, line_width);
     return false;
   }
   return true;
@@ -132,8 +132,6 @@ bool isBoundsValid_i(PieceTable *pt, int i) {
   } 
   return true;
 }
-
-
 
 
 /* Initializes the values for the piece table */
@@ -160,13 +158,11 @@ PieceTable * pt_init(char *text, int add_cap) {
   pt->piece_head->len = text_len;
   pt->piece_head->next = NULL;
 
-  
   // lines
   int initial_num_lines = 1;
   for (size_t i = 0; i < text_len; i++) {
     if (text[i] == '\n') initial_num_lines++;
   }
-  
   pt->lineStarts = safe_malloc(sizeof(unsigned int) * initial_num_lines);
   pt->num_lines = initial_num_lines;
   pt->num_lines_cap = initial_num_lines;
@@ -378,9 +374,10 @@ char pt_get_char_at_i(PieceTable *pt, int i) {
 }
 
 /*
+* Gets the width of the line, INCLUDING \n CHARACTERS
 * Y corresponds to line number
 */
-int pt_line_len(PieceTable *pt, int y) {
+int pt_line_width(PieceTable *pt, int y) {
   if (y == pt->num_lines-1) {
     // Last line
     return pt->content_len - lineStarts_index(pt, y); 

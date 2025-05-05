@@ -19,7 +19,7 @@ void move_left(Cursor *cursor) {
 
 void move_right(PieceTable *pt, Cursor *cursor) {
   /* check condition of right boundary using length of current line  */
-  if (cursor->x < pt_line_len(pt, cursor->y)-1) {
+  if (cursor->x <= pt_line_width(pt, cursor->y)-1) {
     cursor->x++;
     move(cursor->y, cursor->x);
   }
