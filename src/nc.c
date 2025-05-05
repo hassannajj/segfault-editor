@@ -17,10 +17,12 @@ void move_left(Cursor *cursor) {
   }
 }
 
-void move_right(Cursor *cursor) {
-  /*TODO: check condition of right boundary using length of line? */
+void move_right(PieceTable *pt, Cursor *cursor) {
+  /* check condition of right boundary using length of current line  */
+  if (cursor->x+1 < pt_line_len(pt, cursor->y)) {
     cursor->x++;
     move(cursor->y, cursor->x);
+  }
 }
 
 void move_up(Cursor *cursor) { 
@@ -30,10 +32,13 @@ void move_up(Cursor *cursor) {
   }
 }
 
-void move_down(Cursor *cursor) {
-  /*TODO: check condition of down boundary using number of lines? */
+void move_down(PieceTable *pt, Cursor *cursor) {
+  /* check condition of down boundary using number of lines */
+  fprintf(stderr, "%d\n", pt->num_lines);
+  if (cursor->y < pt->num_lines) {
     cursor->y++;
     move(cursor->y, cursor->x);
+  }
 }
 
 void render_ncurses(PieceTable *pt) {
@@ -41,8 +46,8 @@ void render_ncurses(PieceTable *pt) {
   int y = 0;
   int x = 0;
 
-  for (int i = 0; i < pt_content_len(pt); i++) {
-    char c = pt_get_char_at(pt, i);
+  for (int i = 0; i < pt->content_len; i++) {
+    char c = pt_get_char_at_i(pt, i);
     if (c == '\n') {
       y++;
       x = 0;
@@ -123,7 +128,7 @@ int main() {
         }
         break;
       case INPUT_ENTER_CHAR:
-        pt_insert_char(pt, '\n', pt_content_len(pt));
+        pt_insert_char(pt, '\n', pt->content_len);
         cursor->y++;
         cursor->x = 0;
         break;
@@ -132,18 +137,18 @@ int main() {
         move_left(cursor);
         break;
       case INPUT_MOVE_RIGHT:
-        move_right(cursor);
+        move_right(pt, cursor);
         break;
       case INPUT_MOVE_UP:
         move_up(cursor);
         break;
       case INPUT_MOVE_DOWN:
-        move_down(cursor);
+        move_down(pt, cursor);
         break;
 
       case INPUT_INSERT_CHAR:
         // Enter a character into ncurses buffer
-        pt_insert_char(pt, c, pt_content_len(pt));
+        pt_insert_char(pt, c, pt->content_len);
         //mvaddch(cursor->y, cursor->x, c); // y set to 0 for now
         cursor->x++;
         break;
@@ -154,7 +159,7 @@ int main() {
         break;
     }
 
-    mvprintw(10, 0, "cursor y: %d, x: %d\nkey: %c, val: %d, \npt_content_len: %d", cursor->y, cursor->x, c, c, pt_content_len(pt)); /* DEBUG */
+    mvprintw(10, 0, "cursor y: %d, x: %d\nkey: %c, val: %d, \npt->content_len: %d", cursor->y, cursor->x, c, c, pt->content_len); /* DEBUG */
     render_ncurses(pt);
     refresh();
 

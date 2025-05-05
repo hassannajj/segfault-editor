@@ -425,11 +425,11 @@ void test_pt_line_len_after_insert(void) {
 
   // Now expect:
   // "Hello\n" (5) → line 0
-  // "!" (2)   → line 1
+  // "!\n" (2)   → line 1
   // "World"     → line 2
 
   TEST_ASSERT_EQUAL_INT(6, pt_line_len(pt, 0));
-  TEST_ASSERT_EQUAL_INT(1, pt_line_len(pt, 1));
+  TEST_ASSERT_EQUAL_INT(2, pt_line_len(pt, 1));
   TEST_ASSERT_EQUAL_INT(5, pt_line_len(pt, 2));
 
   pt_cleanup(pt);

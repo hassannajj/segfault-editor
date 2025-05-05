@@ -98,7 +98,7 @@ void reset_lines(PieceTable *pt) {
   */
 static int line_start_index(PieceTable *pt, int i) {
   if (i < 0 || i >= pt->num_lines) {
-    fprintf(stderr, "Error: Line index %d is out of bounds [0, %d]\n", i, pt->num_lines);
+    fprintf(stderr, "Error: Line index %d is out of bounds [0, %d)\n", i, pt->num_lines);
   } 
   return pt->line_starts[i];
 }
