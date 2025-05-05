@@ -56,8 +56,8 @@ void render_ncurses(PieceTable *pt) {
       mvaddch(y, x, c); // Prints one char at a time
       x ++;
     }
-
   }
+  mvprintw(15, 0, "pt->content: %s\n", pt_get_content(pt));
 }
 
 static void finish(int sig) {
@@ -127,7 +127,7 @@ int main() {
         }
         break;
       case INPUT_ENTER_CHAR:
-        pt_insert_char(pt, '\n', pt->content_len);
+        pt_insert_char(pt, '\n', cursor->x);
         cursor->y++;
         cursor->x = 0;
         break;
@@ -147,7 +147,7 @@ int main() {
 
       case INPUT_INSERT_CHAR:
         // Enter a character into ncurses buffer
-        pt_insert_char(pt, c, pt->content_len);
+        pt_insert_char(pt, c, cursor->x);
         //mvaddch(cursor->y, cursor->x, c); // y set to 0 for now
         cursor->x++;
         break;

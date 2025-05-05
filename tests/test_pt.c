@@ -435,6 +435,90 @@ void test_pt_line_len_after_insert(void) {
   pt_cleanup(pt);
 }
 
+void test_insert_text_at_YX_basic_cases(void) {
+  PieceTable *pt = pt_init("Hello\nWorld", INITIAL_ADD_CAP);
+
+  // Insert "!!" in middle of "World"
+  pt_insert_text_at_YX(pt, "!!", 1, 3);  // "Wor!!ld"
+  char *result = pt_get_content(pt);
+  TEST_ASSERT_EQUAL_STRING("Hello\nWor!!ld", result);
+  free(result);
+
+  // Insert "Start " at beginning of "Wor!!ld"
+  pt_insert_text_at_YX(pt, "Start ", 1, 0);  // "Start Wor!!ld"
+  result = pt_get_content(pt);
+  TEST_ASSERT_EQUAL_STRING("Hello\nStart Wor!!ld", result);
+  free(result);
+
+  // Insert "!" at end of "Hello"
+  pt_insert_char_at_YX(pt, '!', 0, 5);
+  result = pt_get_content(pt);
+  TEST_ASSERT_EQUAL_STRING("Hello!\nStart Wor!!ld", result);
+  free(result);
+  pt_cleanup(pt);
+}
+
+void test_insert_text_at_YX_edge_cases(void) {
+  PieceTable *pt1 = pt_init("One\nTwo", INITIAL_ADD_CAP);
+
+  // Line out of bounds
+  pt_insert_text_at_YX(pt1, "Fail", 5, 0);
+  char *result = pt_get_content(pt1);
+  TEST_ASSERT_EQUAL_STRING("One\nTwo", result);
+  free(result);
+
+  pt_cleanup(pt1);
+
+  PieceTable *pt2 = pt_init("Short", INITIAL_ADD_CAP);
+
+  // Col too wide
+  pt_insert_char_at_YX(pt2, 'X', 0, 99);
+  result = pt_get_content(pt2);
+  TEST_ASSERT_EQUAL_STRING("Short", result);
+  free(result);
+
+  pt_cleanup(pt2);
+}
+
+void test_bounds_valid_yx() {
+  PieceTable *pt = pt_init("line1\nline2\nline3", 100);
+  
+  // Valid YX
+  TEST_ASSERT_TRUE(isBoundsValid_YX(pt, 0, 2));  // "l i n e 1"
+  TEST_ASSERT_TRUE(isBoundsValid_YX(pt, 1, 0));  // "l"
+  
+  // Edge case: last char of last line
+  int last_line = pt->num_lines - 1;
+  TEST_ASSERT_TRUE(isBoundsValid_YX(pt, last_line, pt_line_len(pt, last_line) - 1));
+  
+  // Out-of-bounds Y
+  TEST_ASSERT_FALSE(isBoundsValid_YX(pt, -1, 0));
+  TEST_ASSERT_FALSE(isBoundsValid_YX(pt, pt->num_lines, 0));
+
+  // Out-of-bounds X
+  TEST_ASSERT_FALSE(isBoundsValid_YX(pt, 0, -1));
+  TEST_ASSERT_FALSE(isBoundsValid_YX(pt, 0, pt_line_len(pt, 0)));
+
+  pt_cleanup(pt);
+}
+
+void test_bounds_valid_i() {
+  PieceTable *pt = pt_init("abc\ndef", 100);
+
+  // Valid indices
+  for (int i = 0; i < pt->content_len; i++) {
+    TEST_ASSERT_TRUE(isBoundsValid_i(pt, i));
+  }
+
+  // Out-of-bounds
+  TEST_ASSERT_FALSE(isBoundsValid_i(pt, -1));
+  TEST_ASSERT_FALSE(isBoundsValid_i(pt, pt->content_len));
+
+  pt_cleanup(pt);
+}
+
+
+
 int main(void) {
   UNITY_BEGIN();
 
@@ -484,9 +568,18 @@ int main(void) {
   RUN_TEST(test_get_char_at_YX_out_of_bounds);
   RUN_TEST(test_get_char_at_YX_after_insert);
   RUN_TEST(test_get_char_at_YX_edge_cases);
-
+  
+  /* Line length */
   RUN_TEST(test_pt_line_len_various_layouts);
   RUN_TEST(test_pt_line_len_after_insert);
+  
+  /* Insert Text/char at YX */
+  RUN_TEST(test_insert_text_at_YX_basic_cases);
+  RUN_TEST(test_insert_text_at_YX_edge_cases);
+
+  /* Bounds checking */
+  RUN_TEST(test_bounds_valid_yx);
+  RUN_TEST(test_bounds_valid_i);
 
   return UNITY_END();
 }

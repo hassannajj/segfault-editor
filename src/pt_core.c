@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 #include "safe_memory.h"
 
@@ -97,15 +98,42 @@ void reset_lines(PieceTable *pt) {
   */
 static int line_start_index(PieceTable *pt, int i) {
   if (i < 0 || i >= pt->num_lines) {
-    fprintf(stderr, "Error: Line index %d is out of bounds [0, %d)\n", i, pt->num_lines);
+    fprintf(stderr, "Error: LineStarts index %d is out of bounds [0, %d)\n", i, pt->num_lines);
   } 
   return pt->line_starts[i];
 }
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///
 
 /* PUBLIC piece table functions */
+
+bool isBoundsValid_YX(PieceTable *pt, int y, int x) {
+  if (y < 0 || y >= pt->num_lines) {
+    // Line is out of bounds
+    fprintf(stderr, "Error: Line %d is out of bounds [0, %d]\n", y, pt->num_lines); 
+    return false;
+  }
+  int line_len = pt_line_len(pt, y);
+  if (x < 0 || x >= line_len) {
+    // Cursor is out of bounds
+    fprintf(stderr, "Error: Cursor %d is out of bounds [0, %d]\n", x, line_len);
+    return false;
+  }
+  return true;
+
+}
+
+bool isBoundsValid_i(PieceTable *pt, int i) {
+  if (i < 0 || i >= pt->content_len) {
+    fprintf(stderr, "Error: Raw point %d is out of bounds [0, %d]\n", i, pt->content_len);
+    return false;
+  } 
+  return true;
+}
+
+
 
 
 /* Initializes the values for the piece table */
@@ -223,6 +251,31 @@ void pt_insert_char(PieceTable *pt, char c, int index) {
   pt_insert_text(pt, s, index);
 }
 
+/* 
+* Inserts the text at line y, cursor x
+* Y corresponds to line number
+* X corresponds to horizontal cursor
+*/
+void pt_insert_text_at_YX(PieceTable *pt, char *text, int y, int x) {
+  if (!isBoundsValid_YX(pt, y, x)) {
+    return; 
+  }
+  int line_start = line_start_index(pt, y);
+  pt_insert_text(pt, text, line_start + x);
+}
+
+/* 
+* Inserts the the char at line y, cursor x
+* Y corresponds to line number
+* X corresponds to horizontal cursor
+*/
+void pt_insert_char_at_YX(PieceTable *pt, char c, int y, int x) {
+  if (!isBoundsValid_YX(pt, y, x)) {
+    return; 
+  }
+  int line_start = line_start_index(pt, y);
+  pt_insert_char(pt, c, line_start + x);
+}
 
 char *pt_get_content(PieceTable *pt) {
   Piece *curr = pt->piece_head;
@@ -301,10 +354,9 @@ void pt_print(PieceTable *pt) {
 
 
 char pt_get_char_at_i(PieceTable *pt, int i) {
-  if (i < 0 || i >= pt->content_len) {
-    fprintf(stderr, "Error: Point %d is out of bounds [0, %d]\n", i, pt->content_len);
+  if (!isBoundsValid_i(pt, i)) {
     return '\0';
-  } 
+  }
 
   Piece *curr = pt->piece_head;
   int running_len = 0;
@@ -343,16 +395,10 @@ int pt_line_len(PieceTable *pt, int y) {
 * X corresponds to horizontal cursor
 */
 char pt_get_char_at_YX(PieceTable *pt, int y, int x) {
-  if (y < 0 || y >= pt->num_lines) {
-    // Line is out of bounds
-    fprintf(stderr, "Error: Line %d is out of bounds [0, %d]\n", y, pt->num_lines); 
-  }
-  if (x < 0 || x >= pt_line_len(pt, y)) {
-    // Cursor is out of bounds
-    fprintf(stderr, "Error: Cursor %d is out of bounds [0, %d]\n", x, pt_line_len(pt, y));
+  if (!isBoundsValid_YX(pt, y, x)) {
     return '\0';
   }
-  int line_start = line_start_index(pt, y);
 
+  int line_start = line_start_index(pt, y);
   return pt_get_char_at_i(pt, line_start + x);
 }

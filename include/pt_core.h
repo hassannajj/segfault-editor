@@ -1,4 +1,4 @@
-
+#include <stdbool.h>
 
 #ifndef PT_CORE_H
 #define PT_CORE_H
@@ -56,6 +56,18 @@ PieceTable * pt_init(char *text, int add_cap);
 */
 void pt_insert_text(PieceTable *pt, char *text, int insert_point);
 void pt_insert_char(PieceTable *pt, char c, int index);
+
+void pt_insert_text_at_YX(PieceTable *pt, char *text, int y, int x);
+void pt_insert_char_at_YX(PieceTable *pt, char c, int y, int x);
+
+
+/* Bounds checking and error printing
+ * YX for line, cursor
+ * i for raw point indexing 
+ */
+bool isBoundsValid_YX(PieceTable *pt, int y, int x);
+bool isBoundsValid_i(PieceTable *pt, int i);
+
 
 /*
  * Dynamically allocates content that is stitched together from the piece table
