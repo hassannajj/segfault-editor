@@ -17,7 +17,6 @@ static void ensure_add_capacity(PieceTable *pt, int required) {
 }
 
 static void expand_num_lines_cap(PieceTable *pt) {
-  printf("expand_num_lines_cap() called\ncap: %d\nnum_lines: %d\n", pt->num_lines_cap, pt->num_lines);
   /* Realloc line_starts arr */ 
   pt->num_lines_cap *= 2; 
   pt->line_starts = safe_realloc(pt->line_starts, sizeof(unsigned int) * pt->num_lines_cap);

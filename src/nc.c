@@ -19,7 +19,7 @@ void move_left(Cursor *cursor) {
 
 void move_right(PieceTable *pt, Cursor *cursor) {
   /* check condition of right boundary using length of current line  */
-  if (cursor->x+1 < pt_line_len(pt, cursor->y)) {
+  if (cursor->x < pt_line_len(pt, cursor->y)-1) {
     cursor->x++;
     move(cursor->y, cursor->x);
   }
@@ -34,8 +34,7 @@ void move_up(Cursor *cursor) {
 
 void move_down(PieceTable *pt, Cursor *cursor) {
   /* check condition of down boundary using number of lines */
-  fprintf(stderr, "%d\n", pt->num_lines);
-  if (cursor->y < pt->num_lines) {
+  if (cursor->y < pt->num_lines-1) {
     cursor->y++;
     move(cursor->y, cursor->x);
   }
@@ -103,7 +102,7 @@ int main() {
   }
 
   Cursor *cursor = malloc(sizeof(Cursor));
-  PieceTable *pt = pt_init("this is line 3.\nthis is line2.\nThis is line 1.!\n", INITIAL_ADD_CAP);
+  PieceTable *pt = pt_init("", INITIAL_ADD_CAP);
 
   cursor->x = 0;
   cursor->y = 0;
@@ -160,7 +159,13 @@ int main() {
     }
 
     mvprintw(10, 0, "cursor y: %d, x: %d\nkey: %c, val: %d, \npt->content_len: %d", cursor->y, cursor->x, c, c, pt->content_len); /* DEBUG */
+
+    /* Renders the text in piece table */
     render_ncurses(pt);
+
+    /* Moves the cursor in the correct location */
+    move(cursor->y, cursor->x); 
+
     refresh();
 
   }
