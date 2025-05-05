@@ -18,9 +18,9 @@ static void ensure_add_capacity(PieceTable *pt, int required) {
 }
 
 static void expand_num_lines_cap(PieceTable *pt) {
-  /* Realloc line_starts arr */ 
+  /* Realloc lineStarts arr */ 
   pt->num_lines_cap *= 2; 
-  pt->line_starts = safe_realloc(pt->line_starts, sizeof(unsigned int) * pt->num_lines_cap);
+  pt->lineStarts = safe_realloc(pt->lineStarts, sizeof(unsigned int) * pt->num_lines_cap);
 }
 
 
@@ -81,26 +81,26 @@ static void insert_piece(PieceTable *pt, Piece *curr, Piece *prev, int local_ins
 /* TODO: add a outdated_start_line_index
  */
 void reset_lines(PieceTable *pt) {
-    pt->line_starts[0] = 0;
+    pt->lineStarts[0] = 0;
     pt->num_lines = 1;
     for (int i = 0; i < pt->content_len; i++) {
         if (pt_get_char_at_i(pt, i) == '\n') {
             if (pt->num_lines >= pt->num_lines_cap) {
                 expand_num_lines_cap(pt);
             }
-            pt->line_starts[pt->num_lines++] = i + 1;
+            pt->lineStarts[pt->num_lines++] = i + 1;
         }
     }
 }
 
 /*
- * TODO: When accessing an outdated line, update the line_start arr first
+ * TODO: When accessing an outdated line, update the lineStarts arr first
   */
-static int line_start_index(PieceTable *pt, int i) {
+static int lineStarts_index(PieceTable *pt, int i) {
   if (i < 0 || i >= pt->num_lines) {
     fprintf(stderr, "Error: LineStarts index %d is out of bounds [0, %d)\n", i, pt->num_lines);
   } 
-  return pt->line_starts[i];
+  return pt->lineStarts[i];
 }
 
 
@@ -167,7 +167,7 @@ PieceTable * pt_init(char *text, int add_cap) {
     if (text[i] == '\n') initial_num_lines++;
   }
   
-  pt->line_starts = safe_malloc(sizeof(unsigned int) * initial_num_lines);
+  pt->lineStarts = safe_malloc(sizeof(unsigned int) * initial_num_lines);
   pt->num_lines = initial_num_lines;
   pt->num_lines_cap = initial_num_lines;
 
@@ -260,7 +260,7 @@ void pt_insert_text_at_YX(PieceTable *pt, char *text, int y, int x) {
   if (!isBoundsValid_YX(pt, y, x)) {
     return; 
   }
-  int line_start = line_start_index(pt, y);
+  int line_start = lineStarts_index(pt, y);
   pt_insert_text(pt, text, line_start + x);
 }
 
@@ -273,7 +273,7 @@ void pt_insert_char_at_YX(PieceTable *pt, char c, int y, int x) {
   if (!isBoundsValid_YX(pt, y, x)) {
     return; 
   }
-  int line_start = line_start_index(pt, y);
+  int line_start = lineStarts_index(pt, y);
   pt_insert_char(pt, c, line_start + x);
 }
 
@@ -315,7 +315,7 @@ void pt_cleanup(PieceTable *pt) {
   }
   free(pt->original);
   free(pt->add);
-  free(pt->line_starts);
+  free(pt->lineStarts);
   free(pt);
 }
 
@@ -345,7 +345,7 @@ void pt_print(PieceTable *pt) {
 
   printf("--- line starts --- \n");
   for (int i=0; i < pt->num_lines; i++) {
-    printf("Line start %d: %d\n", i, pt->line_starts[i]);
+    printf("Line start %d: %d\n", i, pt->lineStarts[i]);
   }
   printf("\n\n");
 
@@ -383,9 +383,9 @@ char pt_get_char_at_i(PieceTable *pt, int i) {
 int pt_line_len(PieceTable *pt, int y) {
   if (y == pt->num_lines-1) {
     // Last line
-    return pt->content_len - line_start_index(pt, y); 
+    return pt->content_len - lineStarts_index(pt, y); 
   }
-  return line_start_index(pt, y+1) - line_start_index(pt, y);
+  return lineStarts_index(pt, y+1) - lineStarts_index(pt, y);
 }
 
 
@@ -399,6 +399,6 @@ char pt_get_char_at_YX(PieceTable *pt, int y, int x) {
     return '\0';
   }
 
-  int line_start = line_start_index(pt, y);
+  int line_start = lineStarts_index(pt, y);
   return pt_get_char_at_i(pt, line_start + x);
 }

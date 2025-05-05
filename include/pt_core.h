@@ -31,7 +31,7 @@ typedef struct {
   int add_len;
   int add_cap; // Capacity of add buffer size, doubles when full
 
-  int *line_starts; // array of where each line starts
+  int *lineStarts; // array of where each line starts
   int num_lines;
   int num_lines_cap; // Capacity of number of lines, doubles when full
 } PieceTable;

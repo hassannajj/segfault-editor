@@ -247,19 +247,19 @@ void test_complex_edit_sequence(void) {
   free(result);
 }
 
-void test_line_starts_init(void) {
+void test_lineStarts_init(void) {
   const char *text = "line1\nline2\nline3";
   PieceTable *pt = pt_init((char *)text, INITIAL_ADD_CAP);
 
   TEST_ASSERT_EQUAL_INT(3, pt->num_lines);  // 3 lines total
-  TEST_ASSERT_EQUAL_INT(0, pt->line_starts[0]);   // line1
-  TEST_ASSERT_EQUAL_INT(6, pt->line_starts[1]);   // line2 starts after '\n'
-  TEST_ASSERT_EQUAL_INT(12, pt->line_starts[2]);  // line3
+  TEST_ASSERT_EQUAL_INT(0, pt->lineStarts[0]);   // line1
+  TEST_ASSERT_EQUAL_INT(6, pt->lineStarts[1]);   // line2 starts after '\n'
+  TEST_ASSERT_EQUAL_INT(12, pt->lineStarts[2]);  // line3
 
   pt_cleanup(pt);
 }
 
-void test_line_starts_after_insert_newline(void) {
+void test_lineStarts_after_insert_newline(void) {
   PieceTable *pt = pt_init("Hello\nWorld", INITIAL_ADD_CAP);
   pt_insert_text(pt, "\nNewLine", 5);  // insert newline in middle of line 0
 
@@ -269,24 +269,24 @@ void test_line_starts_after_insert_newline(void) {
   TEST_ASSERT_EQUAL_STRING("Hello\nNewLine\nWorld", result);
 
   // Line starts:
-  TEST_ASSERT_EQUAL_INT(0, pt->line_starts[0]);        // "Hello"
-  TEST_ASSERT_EQUAL_INT(6, pt->line_starts[1]);        // "\nNewLine"
-  TEST_ASSERT_EQUAL_INT(14, pt->line_starts[2]);       // "\nWorld"
+  TEST_ASSERT_EQUAL_INT(0, pt->lineStarts[0]);        // "Hello"
+  TEST_ASSERT_EQUAL_INT(6, pt->lineStarts[1]);        // "\nNewLine"
+  TEST_ASSERT_EQUAL_INT(14, pt->lineStarts[2]);       // "\nWorld"
 
   pt_cleanup(pt);
   free(result);
 }
 
-void test_line_starts_with_no_newlines(void) {
+void test_lineStarts_with_no_newlines(void) {
   PieceTable *pt = pt_init("SingleLine", INITIAL_ADD_CAP);
   TEST_ASSERT_EQUAL_INT(1, pt->num_lines);
-  TEST_ASSERT_EQUAL_INT(0, pt->line_starts[0]);
+  TEST_ASSERT_EQUAL_INT(0, pt->lineStarts[0]);
 
   pt_cleanup(pt);
 }
 
-void test_line_starts_expand_cap(void) {
-  // Force line_starts to grow
+void test_lineStarts_expand_cap(void) {
+  // Force lineStarts to grow
   char big_text[2048];
   int count = 0;
   for (long unsigned int i = 0; i < sizeof(big_text) - 2; i++) {
@@ -301,8 +301,8 @@ void test_line_starts_expand_cap(void) {
   pt_insert_text(pt, "hello", 1000);
 
   TEST_ASSERT_TRUE(pt->num_lines >= count + 1);
-  TEST_ASSERT_TRUE(pt->line_starts[100] == 1000);
-  TEST_ASSERT_TRUE(pt->line_starts[101] == 1015);
+  TEST_ASSERT_TRUE(pt->lineStarts[100] == 1000);
+  TEST_ASSERT_TRUE(pt->lineStarts[101] == 1015);
   TEST_ASSERT_TRUE(pt->num_lines_cap >= pt->num_lines);
   pt_cleanup(pt);
 }
@@ -558,10 +558,10 @@ int main(void) {
   RUN_TEST(test_complex_edit_sequence); 
 
   // Line starts arr
-  RUN_TEST(test_line_starts_init);
-  RUN_TEST(test_line_starts_after_insert_newline);
-  RUN_TEST(test_line_starts_with_no_newlines);
-  RUN_TEST(test_line_starts_expand_cap);
+  RUN_TEST(test_lineStarts_init);
+  RUN_TEST(test_lineStarts_after_insert_newline);
+  RUN_TEST(test_lineStarts_with_no_newlines);
+  RUN_TEST(test_lineStarts_expand_cap);
 
   // Get char at YX
   RUN_TEST(test_get_char_at_YX_basic_access);
