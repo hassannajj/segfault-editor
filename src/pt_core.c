@@ -118,9 +118,6 @@ bool isBoundsValid_YX(PieceTable *pt, int y, int x) {
   }
   int line_len = pt_line_len(pt, y);
 
-  /* Appending at the very last character */ 
-  if (y == pt->num_lines-1 && x == line_len) return true; 
-
   if (x < 0 || x >= line_len) {
     // Cursor is out of bounds
     fprintf(stderr, "Error: Cursor %d is out of bounds [0, %d)\n", x, line_len);
@@ -398,6 +395,10 @@ int pt_line_width(PieceTable *pt, int y) {
   return pt_line_len(pt, y) - 1;
 }
 
+int pt_num_lines(PieceTable *pt) {
+  return pt->num_lines;
+}
+
 
 /* 
 * This returns the char at line y, cursor x
@@ -412,3 +413,5 @@ char pt_get_char_at_YX(PieceTable *pt, int y, int x) {
   int line_start = lineStarts_index(pt, y);
   return pt_get_char_at_i(pt, line_start + x);
 }
+
+

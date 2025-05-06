@@ -50,7 +50,7 @@ void move_up(PieceTable *pt, Cursor *cursor) {
 
 void move_down(PieceTable *pt, Cursor *cursor) {
   /* check condition of lower boundary using number of lines */
-  if (cursor->y >= pt->num_lines-1) return;
+  if (cursor->y >= pt_num_lines(pt)-1) return;
 
   cursor->y++;
 
@@ -157,6 +157,7 @@ int main() {
         pt_insert_char_at_YX(pt, '\n', cursor->y, cursor->x);
         cursor->y++;
         cursor->x = 0;
+        cursor->smart_x = cursor->x;
         break;
 
       case INPUT_MOVE_LEFT:
@@ -177,6 +178,7 @@ int main() {
         pt_insert_char_at_YX(pt, c, cursor->y, cursor->x);
         //mvaddch(cursor->y, cursor->x, c); // y set to 0 for now
         cursor->x++;
+        cursor->smart_x = cursor->x;
         break;
       default:
         // Unknown command
@@ -188,7 +190,7 @@ int main() {
 
     /* Renders the text in piece table */
     render_ncurses(pt);
-    mvprintw(12, 0, "cursor y: %d, x: %d\nline_width: %d\nline_len: %d\nnum_lines: %d\nkey: %c, val: %d, \npt->content_len: %d", cursor->y, cursor->x, pt_line_width(pt, cursor->y), pt_line_len(pt, cursor->y), pt->num_lines, c, c, pt->content_len); /* DEBUG */
+    mvprintw(12, 0, "cursor y: %d, x: %d\nline_width: %d\nline_len: %d\nnum_lines: %d\nkey: %c, val: %d, \npt->content_len: %d", cursor->y, cursor->x, pt_line_width(pt, cursor->y), pt_line_len(pt, cursor->y), pt_num_lines(pt), c, c, pt->content_len); /* DEBUG */
 
     /* Moves the cursor in the correct location */
     move(cursor->y, cursor->x); 

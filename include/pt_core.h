@@ -101,4 +101,7 @@ int pt_line_len(PieceTable *pt, int y);
  * Does not include \n chars*/
 int pt_line_width(PieceTable *pt, int y);
 
+/* Returns pt->num_lines, this is a function to provide better abstraction */
+int pt_num_lines(PieceTable *pt);
 #endif
+

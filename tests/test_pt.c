@@ -251,7 +251,7 @@ void test_lineStarts_init(void) {
   const char *text = "line1\nline2\nline3";
   PieceTable *pt = pt_init((char *)text, INITIAL_ADD_CAP);
 
-  TEST_ASSERT_EQUAL_INT(3, pt->num_lines);  // 3 lines total
+  TEST_ASSERT_EQUAL_INT(3, pt_num_lines(pt));  // 3 lines total
   TEST_ASSERT_EQUAL_INT(0, pt->lineStarts[0]);   // line1
   TEST_ASSERT_EQUAL_INT(6, pt->lineStarts[1]);   // line2 starts after '\n'
   TEST_ASSERT_EQUAL_INT(12, pt->lineStarts[2]);  // line3
@@ -263,7 +263,7 @@ void test_lineStarts_after_insert_newline(void) {
   PieceTable *pt = pt_init("Hello\nWorld", INITIAL_ADD_CAP);
   pt_insert_text(pt, "\nNewLine", 5);  // insert newline in middle of line 0
 
-  TEST_ASSERT_TRUE(pt->num_lines == 3);  // should now have at least 3 lines
+  TEST_ASSERT_TRUE(pt_num_lines(pt) == 3);  // should now have at least 3 lines
 
   char *result = pt_get_content(pt);
   TEST_ASSERT_EQUAL_STRING("Hello\nNewLine\nWorld", result);
@@ -279,7 +279,7 @@ void test_lineStarts_after_insert_newline(void) {
 
 void test_lineStarts_with_no_newlines(void) {
   PieceTable *pt = pt_init("SingleLine", INITIAL_ADD_CAP);
-  TEST_ASSERT_EQUAL_INT(1, pt->num_lines);
+  TEST_ASSERT_EQUAL_INT(1, pt_num_lines(pt));
   TEST_ASSERT_EQUAL_INT(0, pt->lineStarts[0]);
 
   pt_cleanup(pt);
@@ -300,10 +300,10 @@ void test_lineStarts_expand_cap(void) {
   pt_insert_text(pt, big_text, 0);
   pt_insert_text(pt, "hello", 1000);
 
-  TEST_ASSERT_TRUE(pt->num_lines >= count + 1);
+  TEST_ASSERT_TRUE(pt_num_lines(pt) >= count + 1);
   TEST_ASSERT_TRUE(pt->lineStarts[100] == 1000);
   TEST_ASSERT_TRUE(pt->lineStarts[101] == 1015);
-  TEST_ASSERT_TRUE(pt->num_lines_cap >= pt->num_lines);
+  TEST_ASSERT_TRUE(pt->num_lines_cap >= pt_num_lines(pt));
   pt_cleanup(pt);
 }
 
@@ -334,7 +334,7 @@ void test_get_char_at_YX_out_of_bounds(void) {
   TEST_ASSERT_EQUAL_CHAR('\0', pt_get_char_at_YX(pt, -1, 0));
 
   // y >= num_lines
-  TEST_ASSERT_EQUAL_CHAR('\0', pt_get_char_at_YX(pt, pt->num_lines, 0));
+  TEST_ASSERT_EQUAL_CHAR('\0', pt_get_char_at_YX(pt, pt_num_lines(pt), 0));
 
   // Empty line test (middle line is empty)
   PieceTable *pt2 = pt_init("line1\n\nline3", INITIAL_ADD_CAP);
@@ -519,12 +519,12 @@ void test_bounds_valid_yx() {
   TEST_ASSERT_TRUE(isBoundsValid_YX(pt, 1, 0));  // "l"
   
   // Edge case: last char of last line
-  int last_line = pt->num_lines - 1;
+  int last_line = pt_num_lines(pt) - 1;
   TEST_ASSERT_TRUE(isBoundsValid_YX(pt, last_line, pt_line_len(pt, last_line) - 1));
   
   // Out-of-bounds Y
   TEST_ASSERT_FALSE(isBoundsValid_YX(pt, -1, 0));
-  TEST_ASSERT_FALSE(isBoundsValid_YX(pt, pt->num_lines, 0));
+  TEST_ASSERT_FALSE(isBoundsValid_YX(pt, pt_num_lines(pt), 0));
 
   // Out-of-bounds X
   TEST_ASSERT_FALSE(isBoundsValid_YX(pt, 0, -1));
