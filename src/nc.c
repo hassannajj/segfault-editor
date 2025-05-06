@@ -7,48 +7,63 @@
 
 #define INITIAL_ADD_CAP 1024
 
-//TODO: add some sort of variable that will track where the cursor should be 
+// smart_x remembers where the cursor should be when moving up/down lines
 typedef struct {
-    int x, y;
+  int x, y;
+  int smart_x;
 } Cursor;
 
 void move_left(Cursor *cursor) { 
-  if (cursor->x > 0) {
-    cursor->x--;
-    move(cursor->y, cursor->x);
-  }
+  /* Left most boundary */
+  if (cursor-> <= 0) return;
+
+  cursor->x--;
+  cursor->smart_x = cursor->x;
+  move(cursor->y, cursor->x);
 }
 
 void move_right(PieceTable *pt, Cursor *cursor) {
   /* check condition of right boundary using length of current line  */
-  if (cursor->x < pt_line_width(pt, cursor->y)) {
-    cursor->x++;
-    move(cursor->y, cursor->x);
-  }
+  if (cursor->x >= pt_line_width(pt, cursor->y)) return; 
+
+  cursor->x++;
+  cursor->smart_x = cursor->x;
+  move(cursor->y, cursor->x);
 }
 
 void move_up(PieceTable *pt, Cursor *cursor) { 
-  if (cursor->y > 0) {
-    cursor->y--;
+  /* Upper bound check */
+  if (cursor->y <= 0) return; 
 
-    if (cursor->x > pt_line_width(pt, cursor->y)) {
-      cursor->x = pt_line_width(pt, cursor->y);
-    }
-    move(cursor->y, cursor->x);
+  cursor->y--;
+
+  int old_x = cursor->x;
+  int new_width = pt_line_width(pt, cursor->y);
+  if (old_x > new_width) {
+    // then set curr x position to new_width
+    cursor->x = new_width;
+
+  } else if (cursor->smart_x > cursor->x && cursor->smart_x < pt_line_width(pt, cursor->y)) {
+      /* Going to a larger line */ 
+      cursor->x = cursor->smart_x;
   }
+
+  move(cursor->y, cursor->x);
 }
 
 void move_down(PieceTable *pt, Cursor *cursor) {
-  /* check condition of down boundary using number of lines */
-  if (cursor->y < pt->num_lines-1) {
-    cursor->y++;
+  /* check condition of lower boundary using number of lines */
+  if (cursor->y >= pt->num_lines-1) return;
 
-    if (cursor->x > pt_line_width(pt, cursor->y)) {
-      cursor->x = pt_line_width(pt, cursor->y);
-    }
-
-    move(cursor->y, cursor->x);
+  cursor->y++;
+  if (cursor->x > pt_line_width(pt, cursor->y)) {
+    cursor->smart_x = cursor->x;
+    cursor->x = pt_line_width(pt, cursor->y);
+  } else if (cursor->smart_x > cursor->x && cursor->smart_x < pt_line_width(pt, cursor->y)) {
+      cursor->x = cursor->smart_x;
   }
+
+  move(cursor->y, cursor->x);
 }
 
 void render_ncurses(PieceTable *pt) {
@@ -114,10 +129,11 @@ int main() {
 
   Cursor *cursor = malloc(sizeof(Cursor));
   // When opening an empty file, always initialize with a single "\n" char
-  PieceTable *pt = pt_init("hello\nworld", INITIAL_ADD_CAP);
+  PieceTable *pt = pt_init("helloxx\nok\ncool\nworldxx", INITIAL_ADD_CAP);
 
   cursor->x = 0;
   cursor->y = 0;
+  cursor->smart_x = 0;
   bool run = 1;
   while (run) {
     int c = getch();
