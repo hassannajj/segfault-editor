@@ -128,7 +128,7 @@ int main() {
 
   Cursor *cursor = malloc(sizeof(Cursor));
   // When opening an empty file, always initialize with a single "\n" char
-  PieceTable *pt = pt_init("helloxx\nok\ncool\nworldxx", INITIAL_ADD_CAP);
+  PieceTable *pt = pt_init("hellox\nok\ncool\nworldxx", INITIAL_ADD_CAP);
 
   cursor->x = 0;
   cursor->y = 0;

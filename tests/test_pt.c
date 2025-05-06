@@ -490,13 +490,24 @@ void test_insert_text_at_YX_edge_cases(void) {
 
   PieceTable *pt2 = pt_init("Short", INITIAL_ADD_CAP);
 
-  // Col too wide
+  // Appending at very end should work 
   pt_insert_char_at_YX(pt2, 'X', 0, 5);
   result = pt_get_content(pt2);
-  TEST_ASSERT_EQUAL_STRING("Short", result);
+  TEST_ASSERT_EQUAL_STRING("ShortX", result);
   free(result);
 
   pt_cleanup(pt2);
+
+  PieceTable *pt3 = pt_init("Short", INITIAL_ADD_CAP);
+
+  // Appending at very end should work 
+  pt_insert_char_at_YX(pt3, 'X', 0, 6);
+  result = pt_get_content(pt3);
+  TEST_ASSERT_EQUAL_STRING("Short", result);
+  free(result);
+
+  pt_cleanup(pt3);
+
 }
 
 void test_bounds_valid_yx() {
@@ -532,7 +543,7 @@ void test_bounds_valid_i() {
 
   // Out-of-bounds
   TEST_ASSERT_FALSE(isBoundsValid_i(pt, -1));
-  TEST_ASSERT_FALSE(isBoundsValid_i(pt, pt->content_len));
+  TEST_ASSERT_FALSE(isBoundsValid_i(pt, pt->content_len+1));
 
   pt_cleanup(pt);
 }

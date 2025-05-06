@@ -117,6 +117,10 @@ bool isBoundsValid_YX(PieceTable *pt, int y, int x) {
     return false;
   }
   int line_len = pt_line_len(pt, y);
+
+  /* Appending at the very last character */ 
+  if (y == pt->num_lines-1 && x == line_len) return true; 
+
   if (x < 0 || x >= line_len) {
     // Cursor is out of bounds
     fprintf(stderr, "Error: Cursor %d is out of bounds [0, %d)\n", x, line_len);
@@ -127,7 +131,7 @@ bool isBoundsValid_YX(PieceTable *pt, int y, int x) {
 }
 
 bool isBoundsValid_i(PieceTable *pt, int i) {
-  if (i < 0 || i >= pt->content_len) {
+  if (i < 0 || i > pt->content_len) {
     fprintf(stderr, "Error: Raw point %d is out of bounds [0, %d)\n", i, pt->content_len);
     return false;
   } 
@@ -192,10 +196,13 @@ PieceTable * pt_init(char *text, int add_cap) {
 */
 void pt_insert_text(PieceTable *pt, char *text, int insert_point) {
   /* Ensures insertion point is legal (between 0 and content_len) */
+  if (!isBoundsValid_i(pt, insert_point)) return; 
+  /*
   if (insert_point < 0 || insert_point > pt->content_len) {
     fprintf(stderr, "Error: Insertion point %d is out of bounds [0, %d]\n", insert_point, pt->content_len);
     return;
   }
+  */
   /* we need to figure out what the offset is in the add buffer before we append to the add buffer */
   int add_offset = pt->add_len;
 
@@ -252,9 +259,6 @@ void pt_insert_char(PieceTable *pt, char c, int index) {
 * X corresponds to horizontal cursor
 */
 void pt_insert_text_at_YX(PieceTable *pt, char *text, int y, int x) {
-  if (!isBoundsValid_YX(pt, y, x)) {
-    return; 
-  }
   int line_start = lineStarts_index(pt, y);
   pt_insert_text(pt, text, line_start + x);
 }
@@ -265,9 +269,6 @@ void pt_insert_text_at_YX(PieceTable *pt, char *text, int y, int x) {
 * X corresponds to horizontal cursor
 */
 void pt_insert_char_at_YX(PieceTable *pt, char c, int y, int x) {
-  if (!isBoundsValid_YX(pt, y, x)) {
-    return; 
-  }
   int line_start = lineStarts_index(pt, y);
   pt_insert_char(pt, c, line_start + x);
 }
