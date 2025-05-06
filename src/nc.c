@@ -15,7 +15,7 @@ typedef struct {
 
 void move_left(Cursor *cursor) { 
   /* Left most boundary */
-  if (cursor-> <= 0) return;
+  if (cursor->x <= 0) return;
 
   cursor->x--;
   cursor->smart_x = cursor->x;
@@ -37,17 +37,14 @@ void move_up(PieceTable *pt, Cursor *cursor) {
 
   cursor->y--;
 
-  int old_x = cursor->x;
   int new_width = pt_line_width(pt, cursor->y);
-  if (old_x > new_width) {
-    // then set curr x position to new_width
+  if (new_width <= cursor->smart_x) {
+    /* Going to smaller or equal line */
     cursor->x = new_width;
-
-  } else if (cursor->smart_x > cursor->x && cursor->smart_x < pt_line_width(pt, cursor->y)) {
+  } else {
       /* Going to a larger line */ 
       cursor->x = cursor->smart_x;
   }
-
   move(cursor->y, cursor->x);
 }
 
@@ -56,13 +53,15 @@ void move_down(PieceTable *pt, Cursor *cursor) {
   if (cursor->y >= pt->num_lines-1) return;
 
   cursor->y++;
-  if (cursor->x > pt_line_width(pt, cursor->y)) {
-    cursor->smart_x = cursor->x;
-    cursor->x = pt_line_width(pt, cursor->y);
-  } else if (cursor->smart_x > cursor->x && cursor->smart_x < pt_line_width(pt, cursor->y)) {
+
+  int new_width = pt_line_width(pt, cursor->y);
+  if (new_width <= cursor->smart_x) {
+    /* Going to smaller or equal line */
+    cursor->x = new_width;
+  } else {
+      /* Going to a larger line */ 
       cursor->x = cursor->smart_x;
   }
-
   move(cursor->y, cursor->x);
 }
 
