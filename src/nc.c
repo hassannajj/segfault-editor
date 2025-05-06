@@ -21,7 +21,7 @@ void move_left(Cursor *cursor) {
 
 void move_right(PieceTable *pt, Cursor *cursor) {
   /* check condition of right boundary using length of current line  */
-  if (cursor->x < pt_line_width(pt, cursor->y)-1) {
+  if (cursor->x < pt_line_width(pt, cursor->y)) {
     cursor->x++;
     move(cursor->y, cursor->x);
   }
@@ -31,8 +31,8 @@ void move_up(PieceTable *pt, Cursor *cursor) {
   if (cursor->y > 0) {
     cursor->y--;
 
-    if (cursor->x > pt_line_width(pt, cursor->y)-1) {
-      cursor->x = pt_line_width(pt, cursor->y) -1;
+    if (cursor->x > pt_line_width(pt, cursor->y)) {
+      cursor->x = pt_line_width(pt, cursor->y);
     }
     move(cursor->y, cursor->x);
   }
@@ -43,8 +43,8 @@ void move_down(PieceTable *pt, Cursor *cursor) {
   if (cursor->y < pt->num_lines-1) {
     cursor->y++;
 
-    if (cursor->x > pt_line_width(pt, cursor->y)-1) {
-      cursor->x = pt_line_width(pt, cursor->y) -1;
+    if (cursor->x > pt_line_width(pt, cursor->y)) {
+      cursor->x = pt_line_width(pt, cursor->y);
     }
 
     move(cursor->y, cursor->x);
@@ -114,7 +114,7 @@ int main() {
 
   Cursor *cursor = malloc(sizeof(Cursor));
   // When opening an empty file, always initialize with a single "\n" char
-  PieceTable *pt = pt_init("hello\nworld\n", INITIAL_ADD_CAP);
+  PieceTable *pt = pt_init("hello\nworld", INITIAL_ADD_CAP);
 
   cursor->x = 0;
   cursor->y = 0;
@@ -173,7 +173,7 @@ int main() {
 
     /* Renders the text in piece table */
     render_ncurses(pt);
-    mvprintw(10, 0, "cursor y: %d, x: %d\nline_width: %d\nnum_lines: %d\nkey: %c, val: %d, \npt->content_len: %d", cursor->y, cursor->x, pt_line_width(pt, cursor->y), pt->num_lines, c, c, pt->content_len); /* DEBUG */
+    mvprintw(12, 0, "cursor y: %d, x: %d\nline_width: %d\nline_len: %d\nnum_lines: %d\nkey: %c, val: %d, \npt->content_len: %d", cursor->y, cursor->x, pt_line_width(pt, cursor->y), pt_line_len(pt, cursor->y), pt->num_lines, c, c, pt->content_len); /* DEBUG */
 
     /* Moves the cursor in the correct location */
     move(cursor->y, cursor->x); 

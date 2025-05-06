@@ -11,6 +11,9 @@ int main() {
   PieceTable *pt = pt_init(text, INITIAL_ADD_CAP);
 
   pt_insert_text(pt, "cool\n", 6);
+  pt_insert_char(pt, '\n', 16);
+  pt_insert_char(pt, '\n', 17);
+
   pt_print(pt);
   int i = 3;
   printf("index %d: %c", i, pt_get_char_at_i(pt, i));
@@ -19,9 +22,10 @@ int main() {
 
   printf("\n\nCONTENT: \n%s\n", content);
   printf("pieces count: %d\n", pt->piece_count);
+  printf("num lines: %d\n", pt->num_lines);
 
-  int y = 1;
-  int x = 5;
+  int y = 0;
+  int x = 0;
   printf("get char at Y:%d, X:%d -> %c\n", y, x, pt_get_char_at_YX(pt, y, x));
 
   pt_cleanup(pt);

@@ -92,7 +92,13 @@ char pt_get_char_at_i(PieceTable *pt, int i);
 /* Gets character using line and cursor index */
 char pt_get_char_at_YX(PieceTable *pt, int y, int x);
 
-/* Gets length / width of specific line */
+
+/* Gets length of specific line
+ * INCLUDES \n CHARS */
+int pt_line_len(PieceTable *pt, int y);
+
+/* Gets width of specific line 
+ * Does not include \n chars*/
 int pt_line_width(PieceTable *pt, int y);
 
 #endif

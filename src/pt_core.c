@@ -88,7 +88,8 @@ void reset_lines(PieceTable *pt) {
             if (pt->num_lines >= pt->num_lines_cap) {
                 expand_num_lines_cap(pt);
             }
-            pt->lineStarts[pt->num_lines++] = i + 1;
+            pt->lineStarts[pt->num_lines] = i + 1;
+            pt->num_lines++;
         }
     }
 }
@@ -115,10 +116,10 @@ bool isBoundsValid_YX(PieceTable *pt, int y, int x) {
     fprintf(stderr, "Error: Line %d is out of bounds [0, %d)\n", y, pt->num_lines); 
     return false;
   }
-  int line_width = pt_line_width(pt, y);
-  if (x < 0 || x >= line_width) {
+  int line_len = pt_line_len(pt, y);
+  if (x < 0 || x >= line_len) {
     // Cursor is out of bounds
-    fprintf(stderr, "Error: Cursor %d is out of bounds [0, %d)\n", x, line_width);
+    fprintf(stderr, "Error: Cursor %d is out of bounds [0, %d)\n", x, line_len);
     return false;
   }
   return true;
@@ -191,8 +192,6 @@ PieceTable * pt_init(char *text, int add_cap) {
 */
 void pt_insert_text(PieceTable *pt, char *text, int insert_point) {
   /* Ensures insertion point is legal (between 0 and content_len) */
-  /*TODO: this might be inefficient, maybe think about creating a setter functions
-   * to set the total length? */
   if (insert_point < 0 || insert_point > pt->content_len) {
     fprintf(stderr, "Error: Insertion point %d is out of bounds [0, %d]\n", insert_point, pt->content_len);
     return;
@@ -374,15 +373,28 @@ char pt_get_char_at_i(PieceTable *pt, int i) {
 }
 
 /*
-* Gets the width of the line, INCLUDING \n CHARACTERS
+* Gets the length of the line, INCLUDING \n CHARACTERS
 * Y corresponds to line number
 */
-int pt_line_width(PieceTable *pt, int y) {
+int pt_line_len(PieceTable *pt, int y) {
   if (y == pt->num_lines-1) {
     // Last line
     return pt->content_len - lineStarts_index(pt, y); 
   }
   return lineStarts_index(pt, y+1) - lineStarts_index(pt, y);
+}
+
+
+/*
+* Gets the width of the line, NOT INCLUDING \n CHARACTERS
+* Y corresponds to line number
+*/
+int pt_line_width(PieceTable *pt, int y) {
+  if (y == pt->num_lines-1) {
+    // Last line
+    return pt_line_len(pt, y);
+  }
+  return pt_line_len(pt, y) - 1;
 }
 
 
