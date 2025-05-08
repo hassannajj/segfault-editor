@@ -11,8 +11,6 @@ int main() {
   PieceTable *pt = pt_init(text, INITIAL_ADD_CAP);
 
   pt_insert_text(pt, "cool\n", 6);
-  pt_insert_char(pt, '\n', 16);
-  pt_insert_char(pt, '\n', 17);
 
   pt_print(pt);
   int i = 3;

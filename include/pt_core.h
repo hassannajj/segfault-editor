@@ -42,6 +42,14 @@ typedef struct {
  */
 PieceTable * pt_init(char *text, int add_cap);
 
+/* Bounds checking and error printing
+ * YX for line, cursor
+ * i for raw point indexing 
+ */
+bool isBoundsValid_YX(PieceTable *pt, int y, int x);
+bool isBoundsValid_i(PieceTable *pt, int i);
+
+
  /*
  * The Insert Algorithm
 - Checks insertion point is legal
@@ -54,19 +62,19 @@ PieceTable * pt_init(char *text, int add_cap);
     3. The remaining part of the original piece
   then frees the old piece
 */
-void pt_insert_text(PieceTable *pt, char *text, int insert_point);
+void pt_insert_text(PieceTable *pt, char *text, int index);
 void pt_insert_char(PieceTable *pt, char c, int index);
 
 void pt_insert_text_at_YX(PieceTable *pt, char *text, int y, int x);
 void pt_insert_char_at_YX(PieceTable *pt, char c, int y, int x);
 
 
-/* Bounds checking and error printing
- * YX for line, cursor
- * i for raw point indexing 
- */
-bool isBoundsValid_YX(PieceTable *pt, int y, int x);
-bool isBoundsValid_i(PieceTable *pt, int i);
+/* Delete Algorithm */
+void pt_delete_text(PieceTable *pt, int index, int length);
+void pt_delete_char(PieceTable *pt, int index);
+
+void pt_delete_text_at_YX(PieceTable *pt, int y, int x, int length);
+void pt_delete_char_at_YX(PieceTable *pt, int y, int x);
 
 
 /*

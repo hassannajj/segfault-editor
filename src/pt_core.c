@@ -79,6 +79,8 @@ static void insert_piece(PieceTable *pt, Piece *curr, Piece *prev, int local_ins
 }
 
 /* TODO: add a outdated_start_line_index
+ * Maybe, when doing one "edit" , instead of going through entire content again , make it so that you have an upgrade lines and if you insert 5 characters to line 4,
+ * you just need to find where lineStarts arr starts at line 4 , and add 5 characters to each element after that line 4.
  */
 void reset_lines(PieceTable *pt) {
     pt->lineStarts[0] = 0;
@@ -100,6 +102,7 @@ void reset_lines(PieceTable *pt) {
 static int lineStarts_index(PieceTable *pt, int i) {
   if (i < 0 || i >= pt->num_lines) {
     fprintf(stderr, "Error: LineStarts index %d is out of bounds [0, %d)\n", i, pt->num_lines);
+    return;
   } 
   return pt->lineStarts[i];
 }
@@ -191,12 +194,12 @@ PieceTable * pt_init(char *text, int add_cap) {
 
   Also increments the content length
 */
-void pt_insert_text(PieceTable *pt, char *text, int insert_point) {
+void pt_insert_text(PieceTable *pt, char *text, int index) {
   /* Ensures insertion point is legal (between 0 and content_len) */
-  if (!isBoundsValid_i(pt, insert_point)) return; 
+  if (!isBoundsValid_i(pt, index)) return; 
   /*
-  if (insert_point < 0 || insert_point > pt->content_len) {
-    fprintf(stderr, "Error: Insertion point %d is out of bounds [0, %d]\n", insert_point, pt->content_len);
+  if (index < 0 || index > pt->content_len) {
+    fprintf(stderr, "Error: Insertion point %d is out of bounds [0, %d]\n", index, pt->content_len);
     return;
   }
   */
@@ -215,15 +218,15 @@ void pt_insert_text(PieceTable *pt, char *text, int insert_point) {
   int local_insert = -1;
   while (curr != NULL) {
 
-    if (curr->next == NULL && insert_point >= running_len + curr->len) {
+    if (curr->next == NULL && index >= running_len + curr->len) {
       /* Append at the end of the file */
       local_insert = curr->len;
       break;
     }
-    else if (insert_point < running_len + curr->len) {
+    else if (index < running_len + curr->len) {
       /* Append in middle of file */
       //printf("\ninserting text into piece %d\n", count);
-      local_insert = insert_point - running_len;
+      local_insert = index - running_len;
       break;
     }
     running_len += curr->len;
@@ -269,6 +272,30 @@ void pt_insert_char_at_YX(PieceTable *pt, char c, int y, int x) {
   int line_start = lineStarts_index(pt, y);
   pt_insert_char(pt, c, line_start + x);
 }
+
+
+/* Delete Algorithm */
+void pt_delete_text(PieceTable *pt, int index, int length) {
+
+}
+
+void pt_delete_char(PieceTable *pt, int index) {
+  /* Ensures insertion point is legal (between 0 and content_len) */
+  if (!isBoundsValid_i(pt, index)) return; 
+
+}
+
+void pt_delete_text_at_YX(PieceTable *pt, int y, int x, int length) {
+  int line_start = lineStarts_index(pt, y);
+  pt_delete_text(pt, line_start + x, length);
+}
+
+void pt_delete_char_at_YX(PieceTable *pt, int y, int x) {
+  int line_start = lineStarts_index(pt, y);
+  pt_delete_char(pt, line_start + x);
+
+}
+
 
 char *pt_get_content(PieceTable *pt) {
   Piece *curr = pt->piece_head;

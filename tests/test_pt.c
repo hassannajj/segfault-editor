@@ -549,6 +549,223 @@ void test_bounds_valid_i() {
 }
 
 
+void test_delete_char_basic() {
+  char *result;
+
+  // i index
+  PieceTable *pt_i1 = pt_init("abc\ndef", INITIAL_ADD_CAP);
+  pt_delete_char(pt_i1, 0);
+  result = pt_get_content(pt_i1);
+  TEST_ASSERT_EQUAL_STRING("bc\ndef", result);
+  free(result);
+  pt_cleanup(pt_i1);
+
+  PieceTable *pt_i2 = pt_init("abc\ndef", INITIAL_ADD_CAP);
+  pt_delete_char(pt_i2, 3);
+  result = pt_get_content(pt_i2);
+  TEST_ASSERT_EQUAL_STRING("abcdef", result);
+  free(result);
+  pt_cleanup(pt_i2);
+
+  PieceTable *pt_i3 = pt_init("abc\ndef", INITIAL_ADD_CAP);
+  pt_delete_char(pt_i3, 6);
+  result = pt_get_content(pt_i3);
+  TEST_ASSERT_EQUAL_STRING("abc\nde", result);
+  free(result);
+  pt_cleanup(pt_i3);
+  
+  // YX index
+  PieceTable *pt_yx1 = pt_init("abc\ndef", INITIAL_ADD_CAP);
+  pt_delete_char_at_YX(pt_yx1, 0, 0);
+  result = pt_get_content(pt_yx1);
+  TEST_ASSERT_EQUAL_STRING("bc\ndef", result);
+  free(result);
+  pt_cleanup(pt_yx1);
+
+  PieceTable *pt_yx2 = pt_init("abc\ndef", INITIAL_ADD_CAP);
+  pt_delete_char_at_YX(pt_yx2, 0, 3);
+  result = pt_get_content(pt_yx2);
+  TEST_ASSERT_EQUAL_STRING("abcdef", result);
+  free(result);
+  pt_cleanup(pt_yx2);
+
+  PieceTable *pt_yx3 = pt_init("abc\ndef", INITIAL_ADD_CAP);
+  pt_delete_char_at_YX(pt_yx3, 0, 2);
+  result = pt_get_content(pt_yx3);
+  TEST_ASSERT_EQUAL_STRING("abc\nde", result);
+  free(result);
+  pt_cleanup(pt_yx3);
+}
+
+void test_delete_text_basic() {
+  char *result;
+
+  // Deleting 3 characters from the start
+  PieceTable *pt1 = pt_init("abcdef", INITIAL_ADD_CAP);
+  pt_delete_text(pt1, 0, 3);  // remove "abc"
+  result = pt_get_content(pt1);
+  TEST_ASSERT_EQUAL_STRING("def", result);
+  free(result);
+  pt_cleanup(pt1);
+
+  PieceTable *pt1_yx = pt_init("abcdef", INITIAL_ADD_CAP);
+  pt_delete_text_at_YX(pt1_yx, 0, 0, 3);  // same as index 0
+  result = pt_get_content(pt1_yx);
+  TEST_ASSERT_EQUAL_STRING("def", result);
+  free(result);
+  pt_cleanup(pt1_yx);
+
+  // Deleting 3 characters from the middle
+  PieceTable *pt2 = pt_init("abcdef", INITIAL_ADD_CAP);
+  pt_delete_text(pt2, 2, 3);  // remove "cde"
+  result = pt_get_content(pt2);
+  TEST_ASSERT_EQUAL_STRING("abf", result);
+  free(result);
+  pt_cleanup(pt2);
+
+  PieceTable *pt2_yx = pt_init("abcdef", INITIAL_ADD_CAP);
+  pt_delete_text_at_YX(pt2_yx, 0, 2, 3);  // starts at column 2
+  result = pt_get_content(pt2_yx);
+  TEST_ASSERT_EQUAL_STRING("abf", result);
+  free(result);
+  pt_cleanup(pt2_yx);
+
+  // Deleting across a newline: removes "c\nd"
+  PieceTable *pt3 = pt_init("abc\ndef", INITIAL_ADD_CAP);
+  pt_delete_text(pt3, 2, 3);  // remove 'c', '\n', 'd'
+  result = pt_get_content(pt3);
+  TEST_ASSERT_EQUAL_STRING("abef", result);
+  free(result);
+  pt_cleanup(pt3);
+
+  PieceTable *pt3_yx = pt_init("abc\ndef", INITIAL_ADD_CAP);
+  pt_delete_text_at_YX(pt3_yx, 0, 2, 3);  // line 0, col 2 → "c\n"
+  result = pt_get_content(pt3_yx);
+  TEST_ASSERT_EQUAL_STRING("abef", result);
+  free(result);
+  pt_cleanup(pt3_yx);
+
+  // Deleting till the end
+  PieceTable *pt4 = pt_init("abcdef", INITIAL_ADD_CAP);
+  pt_delete_text(pt4, 4, 10);  // remove "ef" (only 2 left)
+  result = pt_get_content(pt4);
+  TEST_ASSERT_EQUAL_STRING("abcd", result);
+  free(result);
+  pt_cleanup(pt4);
+
+  PieceTable *pt4_yx = pt_init("abcdef", INITIAL_ADD_CAP);
+  pt_delete_text_at_YX(pt4_yx, 0, 4, 10);  // from column 4 to end
+  result = pt_get_content(pt4_yx);
+  TEST_ASSERT_EQUAL_STRING("abcd", result);
+  free(result);
+  pt_cleanup(pt4_yx);
+}
+
+void test_delete_out_of_bounds() {
+  char *result;
+
+  // ---- Flat index cases ----
+  // Deletion on empty document
+  PieceTable *pt1 = pt_init("", INITIAL_ADD_CAP);
+  pt_delete_char(pt1, 0);
+  result = pt_get_content(pt1);
+  TEST_ASSERT_EQUAL_STRING("", result);
+  free(result);
+  pt_cleanup(pt1);
+
+  // Negative index
+  PieceTable *pt2 = pt_init("abc", INITIAL_ADD_CAP);
+  pt_delete_char(pt2, -1);  // Should do nothing
+  result = pt_get_content(pt2);
+  TEST_ASSERT_EQUAL_STRING("abc", result);
+  free(result);
+  pt_cleanup(pt2);
+
+  // Index too large
+  PieceTable *pt3 = pt_init("abc", INITIAL_ADD_CAP);
+  pt_delete_char(pt3, 100);  // Should do nothing
+  result = pt_get_content(pt3);
+  TEST_ASSERT_EQUAL_STRING("abc", result);
+  free(result);
+  pt_cleanup(pt3);
+
+  // Text delete with index too large
+  PieceTable *pt4 = pt_init("abc", INITIAL_ADD_CAP);
+  pt_delete_text(pt4, 10, 5);
+  result = pt_get_content(pt4);
+  TEST_ASSERT_EQUAL_STRING("abc", result);
+  free(result);
+  pt_cleanup(pt4);
+
+  // Text delete that overlaps end of content
+  PieceTable *pt5 = pt_init("abc", INITIAL_ADD_CAP);
+  pt_delete_text(pt5, 2, 5);  // Should only remove "c"
+  result = pt_get_content(pt5);
+  TEST_ASSERT_EQUAL_STRING("ab", result);
+  free(result);
+  pt_cleanup(pt5);
+
+  // ---- YX index cases ----
+  // Valid Y, but X out of bounds
+  PieceTable *pt6 = pt_init("abc\ndef", INITIAL_ADD_CAP);
+  pt_delete_char_at_YX(pt6, 0, 10);
+  result = pt_get_content(pt6);
+  TEST_ASSERT_EQUAL_STRING("abc\ndef", result);
+  free(result);
+  pt_cleanup(pt6);
+
+  // Y out of bounds
+  PieceTable *pt7 = pt_init("abc\ndef", INITIAL_ADD_CAP);
+  pt_delete_char_at_YX(pt7, 10, 0);
+  result = pt_get_content(pt7);
+  TEST_ASSERT_EQUAL_STRING("abc\ndef", result);
+  free(result);
+  pt_cleanup(pt7);
+
+  // YX text delete with out-of-bounds length
+  PieceTable *pt8 = pt_init("abc\ndef", INITIAL_ADD_CAP);
+  pt_delete_text_at_YX(pt8, 1, 2, 100);  // start at 'f', go past end
+  result = pt_get_content(pt8);
+  TEST_ASSERT_EQUAL_STRING("abc\nde", result);
+  free(result);
+  pt_cleanup(pt8);
+}
+
+void test_delete_edge_cases() {
+  char *result;
+
+  // Deleting the only character
+  PieceTable *pt1 = pt_init("x", INITIAL_ADD_CAP);
+  pt_delete_char(pt1, 0);
+  result = pt_get_content(pt1);
+  TEST_ASSERT_EQUAL_STRING("", result);
+  free(result);
+  pt_cleanup(pt1);
+
+  // Deleting newline at beginning
+  PieceTable *pt2 = pt_init("\nabc", INITIAL_ADD_CAP);
+  pt_delete_char(pt2, 0);  // remove '\n'
+  result = pt_get_content(pt2);
+  TEST_ASSERT_EQUAL_STRING("abc", result);
+  free(result);
+  pt_cleanup(pt2);
+
+  // Deleting newline at end
+  PieceTable *pt4 = pt_init("abc\n", INITIAL_ADD_CAP);
+  pt_delete_char(pt4, 3);  // remove '\n'
+  result = pt_get_content(pt4);
+  TEST_ASSERT_EQUAL_STRING("abc", result);
+  free(result);
+  pt_cleanup(pt4);
+
+  // Delete 0-length text (no-op)
+  PieceTable *pt5 = pt_init("hello", INITIAL_ADD_CAP);
+  pt_delete_text(pt5, 2, 0);  // should be a no-op
+  result = pt_get_content(pt5);
+  TEST_ASSERT_EQUAL_STRING("hello", result);
+  free(result);
+  pt_cleanup(pt5);
+}
 
 int main(void) {
   UNITY_BEGIN();
@@ -611,6 +828,12 @@ int main(void) {
   /* Bounds checking */
   RUN_TEST(test_bounds_valid_yx);
   RUN_TEST(test_bounds_valid_i);
+
+
+  /* Deleting */
+  RUN_TEST(test_delete_char_basic);
+  RUN_TEST(test_delete_out_of_bounds);
+  RUN_TEST(test_delete_edge_cases);
 
   return UNITY_END();
 }
