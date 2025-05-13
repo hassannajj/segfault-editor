@@ -1,13 +1,8 @@
+0123456 index
+hello   p0
+cool    p1
+world!! p2
+1234567 len
 
-hi guys
 
-
-
-helloxx
-o
-k
-cool
-eeeeeeeeeeeeeeeworldxx
-ok
-
-hello guys
+index = 7 

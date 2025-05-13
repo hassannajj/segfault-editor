@@ -78,6 +78,60 @@ static void insert_piece(PieceTable *pt, Piece *curr, Piece *prev, int local_ins
   pt->piece_count += (left ? 1 : 0) + (right ? 1 : 0);
 }
 
+// Gets the piece where the local delete index starts and manipulates piece table to delete the text
+
+static void delete_with_piece(PieceTable *pt, Piece *curr, Piece *prev, int delete_start, int delete_length) {
+  printf("delete_with_piece: curr->len = %d, delete_start = %d, delete_length = %d\n", curr->len, delete_start, delete_length);
+
+  int delete_end = delete_start + delete_length;
+  if (delete_end > curr->len) {
+    delete_end = curr->len;
+  }
+
+  Piece *left = NULL;
+  if (delete_start > 0) {
+    left = safe_malloc(sizeof(Piece));
+    left->type = curr->type;
+    left->offset = curr->offset;
+    left->len = delete_start;
+  }
+
+  Piece *right = NULL;
+  if (delete_end < curr->len) {
+    right = safe_malloc(sizeof(Piece));
+    right->type = curr->type;
+    right->offset = curr->offset + delete_end;
+    right->len = curr->len - delete_end;
+  }
+
+  Piece *next = curr->next;
+  Piece *new_chain = NULL;
+
+  if (left && right) {
+    left->next = right;
+    right->next = next;
+    new_chain = left;
+  } else if (left) {
+    left->next = next;
+    new_chain = left;
+  } else if (right) {
+    right->next = next;
+    new_chain = right;
+  } else {
+    new_chain = next;
+  }
+
+  if (prev) {
+    prev->next = new_chain;
+  } else {
+    pt->piece_head = new_chain;
+  }
+
+  free(curr);
+  pt->piece_count += (left ? 1 : 0) + (right ? 1 : 0) - 1;
+}
+
+
 /* TODO: add a outdated_start_line_index
  * Maybe, when doing one "edit" , instead of going through entire content again , make it so that you have an upgrade lines and if you insert 5 characters to line 4,
  * you just need to find where lineStarts arr starts at line 4 , and add 5 characters to each element after that line 4.
@@ -102,7 +156,7 @@ void reset_lines(PieceTable *pt) {
 static int lineStarts_index(PieceTable *pt, int i) {
   if (i < 0 || i >= pt->num_lines) {
     fprintf(stderr, "Error: LineStarts index %d is out of bounds [0, %d)\n", i, pt->num_lines);
-    return;
+    return 0;
   } 
   return pt->lineStarts[i];
 }
@@ -214,7 +268,6 @@ void pt_insert_text(PieceTable *pt, char *text, int index) {
   Piece *curr = pt->piece_head;
   Piece *prev = NULL;
 
-  int count = 0;
   int local_insert = -1;
   while (curr != NULL) {
 
@@ -225,14 +278,12 @@ void pt_insert_text(PieceTable *pt, char *text, int index) {
     }
     else if (index < running_len + curr->len) {
       /* Append in middle of file */
-      //printf("\ninserting text into piece %d\n", count);
       local_insert = index - running_len;
       break;
     }
     running_len += curr->len;
     prev = curr;
     curr = curr->next;
-    count ++;
   } 
   if (local_insert == -1) return;
 
@@ -276,13 +327,38 @@ void pt_insert_char_at_YX(PieceTable *pt, char c, int y, int x) {
 
 /* Delete Algorithm */
 void pt_delete_text(PieceTable *pt, int index, int length) {
+  /* Ensures starting point is legal (between 0 and content_len) */
+  if (!isBoundsValid_i(pt, index)|| index == pt->content_len) return; 
 
+  int running_len = 0;
+  Piece *curr = pt->piece_head;
+  Piece *prev = NULL;
+  int local_index;
+
+  // Finds the piece where starting index is 
+  while (curr != NULL) {
+   if (index < running_len + curr->len) {
+      local_index = index - running_len;
+      break;
+    } 
+    running_len += curr->len;
+    prev = curr;
+    curr = curr->next;
+
+  }
+
+  /* Delete in piece table */
+  delete_with_piece(pt, curr, prev, local_index, length);
+
+  /* Decrement the content length */
+  pt->content_len -= length;
+  
+  /* Sets line starts arr */
+  reset_lines(pt);
 }
 
 void pt_delete_char(PieceTable *pt, int index) {
-  /* Ensures insertion point is legal (between 0 and content_len) */
-  if (!isBoundsValid_i(pt, index)) return; 
-
+  pt_delete_text(pt, index, 1);
 }
 
 void pt_delete_text_at_YX(PieceTable *pt, int y, int x, int length) {
@@ -300,9 +376,11 @@ void pt_delete_char_at_YX(PieceTable *pt, int y, int x) {
 char *pt_get_content(PieceTable *pt) {
   Piece *curr = pt->piece_head;
   // Calculate total length
+ 
+  /* Allocated on heap */
   char *result = safe_malloc(pt->content_len + 1);
-  int result_pos = 0;
 
+  int result_pos = 0;
   /* Combine all substrings of pieces */
   curr = pt->piece_head;
   int count = 0;
@@ -412,6 +490,7 @@ int pt_line_len(PieceTable *pt, int y) {
 
 /*
 * Gets the width of the line, NOT INCLUDING \n CHARACTERS
+* For rendering reasons, since we do not render the \n character
 * Y corresponds to line number
 */
 int pt_line_width(PieceTable *pt, int y) {

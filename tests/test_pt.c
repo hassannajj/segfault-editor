@@ -549,6 +549,7 @@ void test_bounds_valid_i() {
 }
 
 
+
 void test_delete_char_basic() {
   char *result;
 
@@ -556,21 +557,21 @@ void test_delete_char_basic() {
   PieceTable *pt_i1 = pt_init("abc\ndef", INITIAL_ADD_CAP);
   pt_delete_char(pt_i1, 0);
   result = pt_get_content(pt_i1);
-  TEST_ASSERT_EQUAL_STRING("bc\ndef", result);
+  TEST_ASSERT_EQUAL_STRING_MESSAGE("bc\ndef", result, "pt_i1 failed: delete index 0");
   free(result);
   pt_cleanup(pt_i1);
 
   PieceTable *pt_i2 = pt_init("abc\ndef", INITIAL_ADD_CAP);
   pt_delete_char(pt_i2, 3);
   result = pt_get_content(pt_i2);
-  TEST_ASSERT_EQUAL_STRING("abcdef", result);
+  TEST_ASSERT_EQUAL_STRING_MESSAGE("abcdef", result, "pt_i2 failed: delete newline at index 3");
   free(result);
   pt_cleanup(pt_i2);
 
   PieceTable *pt_i3 = pt_init("abc\ndef", INITIAL_ADD_CAP);
   pt_delete_char(pt_i3, 6);
   result = pt_get_content(pt_i3);
-  TEST_ASSERT_EQUAL_STRING("abc\nde", result);
+  TEST_ASSERT_EQUAL_STRING_MESSAGE("abc\nde", result, "pt_i3 failed: delete final character");
   free(result);
   pt_cleanup(pt_i3);
   
@@ -578,24 +579,25 @@ void test_delete_char_basic() {
   PieceTable *pt_yx1 = pt_init("abc\ndef", INITIAL_ADD_CAP);
   pt_delete_char_at_YX(pt_yx1, 0, 0);
   result = pt_get_content(pt_yx1);
-  TEST_ASSERT_EQUAL_STRING("bc\ndef", result);
+  TEST_ASSERT_EQUAL_STRING_MESSAGE("bc\ndef", result, "pt_yx1 failed: delete Y=0 X=0");
   free(result);
   pt_cleanup(pt_yx1);
 
   PieceTable *pt_yx2 = pt_init("abc\ndef", INITIAL_ADD_CAP);
   pt_delete_char_at_YX(pt_yx2, 0, 3);
   result = pt_get_content(pt_yx2);
-  TEST_ASSERT_EQUAL_STRING("abcdef", result);
+  TEST_ASSERT_EQUAL_STRING_MESSAGE("abcdef", result, "pt_yx2 failed: delete newline Y=0 X=3");
   free(result);
   pt_cleanup(pt_yx2);
 
   PieceTable *pt_yx3 = pt_init("abc\ndef", INITIAL_ADD_CAP);
-  pt_delete_char_at_YX(pt_yx3, 0, 2);
+  pt_delete_char_at_YX(pt_yx3, 1, 2);
   result = pt_get_content(pt_yx3);
-  TEST_ASSERT_EQUAL_STRING("abc\nde", result);
+  TEST_ASSERT_EQUAL_STRING_MESSAGE("abc\nde", result, "pt_yx3 failed: delete Y=0 X=2");
   free(result);
   pt_cleanup(pt_yx3);
 }
+
 
 void test_delete_text_basic() {
   char *result;
@@ -659,6 +661,47 @@ void test_delete_text_basic() {
   TEST_ASSERT_EQUAL_STRING("abcd", result);
   free(result);
   pt_cleanup(pt4_yx);
+}
+
+void test_delete_multi_pieces() {
+  char *result;
+  // Start with "ace"
+  PieceTable *pt = pt_init("ace", INITIAL_ADD_CAP);
+  // Insert 'b' at index 1 → "abce"
+  pt_insert_char(pt, 'b', 1);
+  // Insert 'd' at index 3 → "abcde"
+  pt_insert_char(pt, 'd', 3);
+
+  result = pt_get_content(pt);
+  TEST_ASSERT_EQUAL_STRING_MESSAGE("abcde", result, "before delete multi-pieces");
+  TEST_ASSERT_EQUAL_INT(5, pt->piece_count);
+  free(result);
+
+  // Delete "bcd" (from index 1 to 3, length 3) → should leave "ae"
+  pt_delete_text(pt, 1, 3);
+  result = pt_get_content(pt);
+  TEST_ASSERT_EQUAL_STRING_MESSAGE("ae", result, "after deleting across multiple pieces");
+  TEST_ASSERT_EQUAL_INT(2, pt->piece_count);
+  free(result);
+
+  // Delete "bcd" (from index 1 to 3, length 3) → should leave "ae"
+  pt_delete_text(pt, 1, 3);
+  result = pt_get_content(pt);
+  TEST_ASSERT_EQUAL_STRING_MESSAGE("ae", result, "after deleting across multiple pieces");
+  free(result);
+  pt_cleanup(pt);
+
+
+  PieceTable *pt2 = pt_init("", INITIAL_ADD_CAP);
+  pt_insert_text(pt2, "Hello", 0);
+  pt_insert_text(pt2, "cool", 5);
+  pt_insert_text(pt2, "World", 9);
+  result = pt_get_content(pt2);
+  TEST_ASSERT_EQUAL_STRING_MESSAGE("HellocoolWorld", result, "Original");
+  free(result);
+  pt_delete_text(pt, 4, 6);
+  TEST_ASSERT_EQUAL_STRING_MESSAGE("HellolWorld", result, "after deleting across multiple pieces");
+  pt_cleanup(pt2);
 }
 
 void test_delete_out_of_bounds() {
@@ -833,6 +876,7 @@ int main(void) {
   /* Deleting */
   RUN_TEST(test_delete_char_basic);
   RUN_TEST(test_delete_out_of_bounds);
+  RUN_TEST(test_delete_multi_pieces);
   RUN_TEST(test_delete_edge_cases);
 
   return UNITY_END();
