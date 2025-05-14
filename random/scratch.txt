@@ -5,4 +5,16 @@ world!! p2
 1234567 len
 
 
-index = 7 
+index = 2
+length = 10
+
+
+0123456 index
+he   p0
+ld!! p1
+1234567 len
+
+
+global_index = 9
+curr->len = 7
+12 > 16

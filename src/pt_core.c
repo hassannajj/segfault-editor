@@ -80,8 +80,8 @@ static void insert_piece(PieceTable *pt, Piece *curr, Piece *prev, int local_ins
 
 // Gets the piece where the local delete index starts and manipulates piece table to delete the text
 
-static void delete_with_piece(PieceTable *pt, Piece *curr, Piece *prev, int delete_start, int delete_length) {
-  printf("delete_with_piece: curr->len = %d, delete_start = %d, delete_length = %d\n", curr->len, delete_start, delete_length);
+static Piece* delete_between_pieces(PieceTable *pt, Piece *curr, Piece *prev, int delete_start, int delete_length) {
+  printf("delete_between_pieces: curr->len = %d, delete_start = %d, delete_length = %d\n", curr->len, delete_start, delete_length);
 
   int delete_end = delete_start + delete_length;
   if (delete_end > curr->len) {
@@ -129,6 +129,7 @@ static void delete_with_piece(PieceTable *pt, Piece *curr, Piece *prev, int dele
 
   free(curr);
   pt->piece_count += (left ? 1 : 0) + (right ? 1 : 0) - 1;
+  return next;
 }
 
 
@@ -264,24 +265,24 @@ void pt_insert_text(PieceTable *pt, char *text, int index) {
   append_to_add_buffer(pt, text);
 
   /* Finds the piece in the piece table where the insertion point falls */
-  int running_len = 0;
+  int global_index = 0;
   Piece *curr = pt->piece_head;
   Piece *prev = NULL;
 
   int local_insert = -1;
   while (curr != NULL) {
 
-    if (curr->next == NULL && index >= running_len + curr->len) {
+    if (curr->next == NULL && index >= global_index + curr->len) {
       /* Append at the end of the file */
       local_insert = curr->len;
       break;
     }
-    else if (index < running_len + curr->len) {
+    else if (index < global_index + curr->len) {
       /* Append in middle of file */
-      local_insert = index - running_len;
+      local_insert = index - global_index;
       break;
     }
-    running_len += curr->len;
+    global_index += curr->len;
     prev = curr;
     curr = curr->next;
   } 
@@ -325,33 +326,56 @@ void pt_insert_char_at_YX(PieceTable *pt, char c, int y, int x) {
 }
 
 
-/* Delete Algorithm */
-void pt_delete_text(PieceTable *pt, int index, int length) {
-  /* Ensures starting point is legal (between 0 and content_len) */
-  if (!isBoundsValid_i(pt, index)|| index == pt->content_len) return; 
+/* Delete Algorithm 
+ * 1. figure out where left segment is
+ * 2. Skip over middle segment (will get deleted)
+ * 3. Figure out where right semment is
+ * 4. Cut out the deleted part*/
 
-  int running_len = 0;
+void pt_delete_text(PieceTable *pt, int delete_index, int delete_length) {
+  /* Ensures starting point is legal (between 0 and content_len) */
+  /*TODO: make better bounds checking because when delete_index== pt->content_len it returns silenetly without error */
+  if (!isBoundsValid_i(pt, delete_index)|| delete_index == pt->content_len) return; 
+  if (!isBoundsValid_i(pt, delete_index+delete_length) || delete_index+delete_length == pt->content_len) return;
+
+  /* TODO: instead of doing this method, Implement this by rebuilidng check chatgpt may 12 11:30pm timelogs */
+  int global_index = 0; // running length
   Piece *curr = pt->piece_head;
   Piece *prev = NULL;
-  int local_index;
 
-  // Finds the piece where starting index is 
+  bool found = false;
+  Piece *left_piece = NULL;
+  int left_local_index;
+  Piece *right_piece = NULL;
+  int right_local_index;
+
+  // Finds the piece where left segment is 
   while (curr != NULL) {
-   if (index < running_len + curr->len) {
-      local_index = index - running_len;
+   if (delete_index < global_index + curr->len) {
+      found = true;
+      left_local_index = delete_index - global_index; // index of left segment
+      left_piece = curr; 
+
+      while (delete_index+ delete_length > global_index+curr->len) {
+        global_index += curr->len;
+        curr = curr->next;
+      }
+      right_local_index = delete_index+delete_length - global_index;
+      right_piece = curr;
       break;
     } 
-    running_len += curr->len;
+    
+    // increment
+    global_index += curr->len;
     prev = curr;
     curr = curr->next;
-
   }
-
-  /* Delete in piece table */
-  delete_with_piece(pt, curr, prev, local_index, length);
-
+  if (found) {
+    // Delete pieces were found
+    printf("left_local_index: %d  left_piece->len:%d\nright_local_index: %d  right_piece->len:%d\n", left_local_index, left_piece->len, right_local_index, right_piece->len);
+  } 
   /* Decrement the content length */
-  pt->content_len -= length;
+  pt->content_len -= delete_length;
   
   /* Sets line starts arr */
   reset_lines(pt);
@@ -446,8 +470,6 @@ void pt_print(PieceTable *pt) {
     printf("Line start %d: %d\n", i, pt->lineStarts[i]);
   }
   printf("\n\n");
-
-  printf("\n\n");
 }
 
 
@@ -457,17 +479,17 @@ char pt_get_char_at_i(PieceTable *pt, int i) {
   }
 
   Piece *curr = pt->piece_head;
-  int running_len = 0;
+  int global_index = 0;
   while (curr) {
-    if (i < running_len + curr->len) {
-      int buffer_index = curr->offset + (i - running_len);
+    if (i < global_index + curr->len) {
+      int buffer_index = curr->offset + (i - global_index);
       if (curr->type == Original) {
         return pt->original[buffer_index];
       } else {
         return pt->add[buffer_index];
       }
     }
-    running_len += curr->len;
+    global_index += curr->len;
     curr = curr->next;
   }
   /* Didn't return anything */  
