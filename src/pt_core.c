@@ -157,7 +157,7 @@ void reset_lines(PieceTable *pt) {
 static int lineStarts_index(PieceTable *pt, int i) {
   if (i < 0 || i >= pt->num_lines) {
     fprintf(stderr, "Error: LineStarts index %d is out of bounds [0, %d)\n", i, pt->num_lines);
-    return 0;
+    return -1;
   } 
   return pt->lineStarts[i];
 }
@@ -335,10 +335,9 @@ void pt_insert_char_at_YX(PieceTable *pt, char c, int y, int x) {
 void pt_delete_text(PieceTable *pt, int delete_index, int delete_length) {
   /* Ensures starting point is legal (between 0 and content_len) */
   /*TODO: make better bounds checking because when delete_index== pt->content_len it returns silenetly without error */
-  if (!isBoundsValid_i(pt, delete_index)|| delete_index == pt->content_len) return; 
-  if (!isBoundsValid_i(pt, delete_index+delete_length) || delete_index+delete_length == pt->content_len) return;
+  if (!isBoundsValid_i(pt, delete_index)|| delete_index == pt->content_len) return;  // This ensures the beginning point of the delete is valid
+  if (!isBoundsValid_i(pt, delete_index+delete_length) || delete_index+delete_length == pt->content_len) return; // This ensures the end point of the delete is valid
 
-  /* TODO: instead of doing this method, Implement this by rebuilidng check chatgpt may 12 11:30pm timelogs */
   int global_index = 0; // running length
   Piece *curr = pt->piece_head;
   Piece *prev = NULL;
@@ -370,10 +369,12 @@ void pt_delete_text(PieceTable *pt, int delete_index, int delete_length) {
     prev = curr;
     curr = curr->next;
   }
-  if (found) {
-    // Delete pieces were found
-    printf("left_local_index: %d  left_piece->len:%d\nright_local_index: %d  right_piece->len:%d\n", left_local_index, left_piece->len, right_local_index, right_piece->len);
-  } 
+  if (!found) {
+    // Delete pieces were not found
+    fprintf(stderr, "Deletion was unsuccessful\n");
+  }
+  printf("left_local_index: %d  left_piece->len:%d\nright_local_index: %d  right_piece->len:%d\n", left_local_index, left_piece->len, right_local_index, right_piece->len);
+
   /* Decrement the content length */
   pt->content_len -= delete_length;
   
