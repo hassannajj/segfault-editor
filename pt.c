@@ -15,7 +15,7 @@ int main() {
 
   pt_print(pt);
 
-  pt_delete_text(pt, 10, 7);
+  pt_delete_text(pt, 2, 1);
 
   pt_cleanup(pt);
 

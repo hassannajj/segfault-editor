@@ -332,11 +332,24 @@ void pt_insert_char_at_YX(PieceTable *pt, char c, int y, int x) {
  * 3. Figure out where right semment is
  * 4. Cut out the deleted part*/
 
-void pt_delete_text(PieceTable *pt, int delete_index, int delete_length) {
-  /* Ensures starting point is legal (between 0 and content_len) */
-  /*TODO: make better bounds checking because when delete_index== pt->content_len it returns silenetly without error */
-  if (!isBoundsValid_i(pt, delete_index)|| delete_index == pt->content_len) return;  // This ensures the beginning point of the delete is valid
-  if (!isBoundsValid_i(pt, delete_index+delete_length) || delete_index+delete_length == pt->content_len) return; // This ensures the end point of the delete is valid
+void pt_delete_text(PieceTable *pt, int delete_index, int delete_size) {
+  if (delete_size < 1) {
+    fprintf(stderr, "Delete fail: delete_size less than 1\n");
+    return;
+  }
+
+  if (!isBoundsValid_i(pt, delete_index)|| delete_index == pt->content_len) {
+    // This ensures the beginning point of the delete is valid
+    fprintf(stderr, "Delete fail: delete_index out of bounds\n");
+    return;
+  } 
+  
+  int delete_end = delete_index + delete_size - 1;
+  if (!isBoundsValid_i(pt, delete_end) || delete_end == pt->content_len)  {
+    // This ensures the end point of the delete is valid
+    fprintf(stderr, "Delete fail: delete_end out of bounds\n");
+    return; 
+  }
 
   int global_index = 0; // running length
   Piece *curr = pt->piece_head;
@@ -355,11 +368,11 @@ void pt_delete_text(PieceTable *pt, int delete_index, int delete_length) {
       left_local_index = delete_index - global_index; // index of left segment
       left_piece = curr; 
 
-      while (delete_index+ delete_length > global_index+curr->len) {
+      while (delete_end > global_index+curr->len) {
         global_index += curr->len;
         curr = curr->next;
       }
-      right_local_index = delete_index+delete_length - global_index;
+      right_local_index = delete_end - global_index;
       right_piece = curr;
       break;
     } 
@@ -376,7 +389,7 @@ void pt_delete_text(PieceTable *pt, int delete_index, int delete_length) {
   printf("left_local_index: %d  left_piece->len:%d\nright_local_index: %d  right_piece->len:%d\n", left_local_index, left_piece->len, right_local_index, right_piece->len);
 
   /* Decrement the content length */
-  pt->content_len -= delete_length;
+  pt->content_len -= delete_size;
   
   /* Sets line starts arr */
   reset_lines(pt);
