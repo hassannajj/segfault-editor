@@ -80,43 +80,40 @@ static void insert_piece(PieceTable *pt, Piece *curr, Piece *prev, int local_ins
 
 // Gets the piece where the local delete index starts and manipulates piece table to delete the text
 
-static Piece* delete_between_pieces(PieceTable *pt, Piece *curr, Piece *prev, int delete_start, int delete_length) {
-  printf("delete_between_pieces: curr->len = %d, delete_start = %d, delete_length = %d\n", curr->len, delete_start, delete_length);
+static void delete_between_pieces(PieceTable* pt, Piece *prev, Piece *left, int left_local_index, Piece *right, int right_local_index) {
+  printf("same piece: %d\n", left==right);
+  printf("prev exists: %d\n", prev!=NULL);
+  Piece* next = right->next;
+  printf("next exists: %d\n", next!=NULL);
 
-  int delete_end = delete_start + delete_length;
-  if (delete_end > curr->len) {
-    delete_end = curr->len;
+  Piece* new_left = NULL;
+  Piece* new_right = NULL;
+
+
+  if (left_local_index > 0) {
+    new_left = safe_malloc(sizeof(Piece));
+    new_left->type = left->type;
+    new_left->offset = left->offset;
+    new_left->len = left_local_index;
   }
-
-  Piece *left = NULL;
-  if (delete_start > 0) {
-    left = safe_malloc(sizeof(Piece));
-    left->type = curr->type;
-    left->offset = curr->offset;
-    left->len = delete_start;
+  if (right_local_index < right->len-1) {
+    new_right = safe_malloc(sizeof(Piece));
+    new_right->type = right->type;
+    new_right->offset = right->offset + right_local_index + 1;
+    new_right->len = right->len - right_local_index - 1;
   }
-
-  Piece *right = NULL;
-  if (delete_end < curr->len) {
-    right = safe_malloc(sizeof(Piece));
-    right->type = curr->type;
-    right->offset = curr->offset + delete_end;
-    right->len = curr->len - delete_end;
-  }
-
-  Piece *next = curr->next;
   Piece *new_chain = NULL;
 
-  if (left && right) {
-    left->next = right;
-    right->next = next;
-    new_chain = left;
-  } else if (left) {
-    left->next = next;
-    new_chain = left;
-  } else if (right) {
-    right->next = next;
-    new_chain = right;
+  if (new_left && new_right) {
+    new_left->next = new_right;
+    new_right->next = next;
+    new_chain = new_left;
+  } else if (new_left) {
+    new_left->next = next;
+    new_chain = new_left;
+  } else if (new_right) {
+    new_right->next = next;
+    new_chain = new_right;
   } else {
     new_chain = next;
   }
@@ -127,10 +124,18 @@ static Piece* delete_between_pieces(PieceTable *pt, Piece *curr, Piece *prev, in
     pt->piece_head = new_chain;
   }
 
-  free(curr);
-  pt->piece_count += (left ? 1 : 0) + (right ? 1 : 0) - 1;
-  return next;
+  /* Free any deleted pieces between left & right */
+  Piece* curr_deleted = left;
+  Piece* curr_next = NULL;
+  while (curr_deleted != right) {
+    curr_next = curr_deleted->next;
+    free(curr_deleted); 
+    curr_deleted = curr_next;
+  }
+  free(right);
+  pt->piece_count += (new_left ? 1 : 0) + (new_right ? 1 : 0) - 1;
 }
+
 
 
 /* TODO: add a outdated_start_line_index
@@ -332,22 +337,21 @@ void pt_insert_char_at_YX(PieceTable *pt, char c, int y, int x) {
  * 3. Figure out where right semment is
  * 4. Cut out the deleted part*/
 
-void pt_delete_text(PieceTable *pt, int delete_index, int delete_size) {
+void pt_delete_text(PieceTable *pt, int delete_start, int delete_size) {
   if (delete_size < 1) {
+    // This nsures the size is greater or equal to 1
     fprintf(stderr, "Delete fail: delete_size less than 1\n");
     return;
   }
-
-  if (!isBoundsValid_i(pt, delete_index)|| delete_index == pt->content_len) {
+  if (!isBoundsValid_i(pt, delete_start)|| delete_start == pt->content_len) {
     // This ensures the beginning point of the delete is valid
-    fprintf(stderr, "Delete fail: delete_index out of bounds\n");
+    fprintf(stderr, "Delete fail: delete_start index out of bounds\n");
     return;
   } 
-  
-  int delete_end = delete_index + delete_size - 1;
+  int delete_end = delete_start + delete_size; // -1 ? 
   if (!isBoundsValid_i(pt, delete_end) || delete_end == pt->content_len)  {
     // This ensures the end point of the delete is valid
-    fprintf(stderr, "Delete fail: delete_end out of bounds\n");
+    fprintf(stderr, "Delete fail: calculated delete_end out of bounds\n");
     return; 
   }
 
@@ -357,22 +361,24 @@ void pt_delete_text(PieceTable *pt, int delete_index, int delete_size) {
 
   bool found = false;
   Piece *left_piece = NULL;
-  int left_local_index;
+  int left_local_index = 0;
   Piece *right_piece = NULL;
-  int right_local_index;
+  int right_local_index = 0;
+  
 
-  // Finds the piece where left segment is 
+  // Finds the piece where left segment (delete_start) is 
   while (curr != NULL) {
-   if (delete_index < global_index + curr->len) {
+   if (delete_start < global_index + curr->len) {
       found = true;
-      left_local_index = delete_index - global_index; // index of left segment
+      left_local_index = delete_start - global_index; // index of left segment
       left_piece = curr; 
 
+      // Iterate pieces until right segment (delete_end) is found 
       while (delete_end > global_index+curr->len) {
         global_index += curr->len;
         curr = curr->next;
       }
-      right_local_index = delete_end - global_index;
+      right_local_index = delete_end - global_index - 1; //-1 because when size is 1, both left and right index point to the same char 
       right_piece = curr;
       break;
     } 
@@ -385,8 +391,11 @@ void pt_delete_text(PieceTable *pt, int delete_index, int delete_size) {
   if (!found) {
     // Delete pieces were not found
     fprintf(stderr, "Deletion was unsuccessful\n");
+    return;
   }
   printf("left_local_index: %d  left_piece->len:%d\nright_local_index: %d  right_piece->len:%d\n", left_local_index, left_piece->len, right_local_index, right_piece->len);
+
+  delete_between_pieces(pt, prev, left_piece, left_local_index, right_piece, right_local_index);
 
   /* Decrement the content length */
   pt->content_len -= delete_size;

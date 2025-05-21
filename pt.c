@@ -15,9 +15,15 @@ int main() {
 
   pt_print(pt);
 
-  pt_delete_text(pt, 2, 1);
+  pt_delete_text(pt, 1, 16);
+
+  char* after = pt_get_content(pt);
+  printf("after deleting: \n%s\n", after);
+  pt_print(pt);
+  printf("after deleting: \n%s\n", after);
 
   pt_cleanup(pt);
+  free(after);
 
   return 0;
 }
