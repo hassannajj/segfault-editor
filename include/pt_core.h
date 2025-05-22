@@ -68,6 +68,9 @@ void pt_insert_char(PieceTable *pt, char c, int index);
 void pt_insert_text_at_YX(PieceTable *pt, char *text, int y, int x);
 void pt_insert_char_at_YX(PieceTable *pt, char c, int y, int x);
 
+/* Appending text */
+void pt_append_text(PieceTable *pt, char *text);
+
 
 /* Delete Algorithm */
 void pt_delete_text(PieceTable *pt, int index, int length);

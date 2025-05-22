@@ -9,9 +9,10 @@ int main() {
   char *text = "";
 
   PieceTable *pt = pt_init(text, INITIAL_ADD_CAP);
-  pt_insert_text(pt, "hello", 0);
-  pt_insert_text(pt, "cool", 5);
-  pt_insert_text(pt, "world!!", 9);
+
+  pt_append_text(pt, "hello");
+  pt_append_text(pt, "cool");
+  pt_append_text(pt, "world!!");
 
   pt_print(pt);
 

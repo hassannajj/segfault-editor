@@ -337,6 +337,13 @@ void pt_insert_char_at_YX(PieceTable *pt, char c, int y, int x) {
 }
 
 
+/* Appending text */
+void pt_append_text(PieceTable *pt, char *text) {
+  // pt->content_len -1 because the last character is a '\n';
+  pt_insert_text(pt, text, pt->content_len - 1);
+}
+
+
 /* Delete Algorithm 
  * 1. figure out where left segment is
  * 2. Skip over middle segment (will get deleted)
@@ -355,7 +362,9 @@ void pt_delete_text(PieceTable *pt, int delete_start, int delete_size) {
     return;
   } 
   int delete_end = delete_start + delete_size; // -1 ? 
-  if (!isBoundsValid_i(pt, delete_end) || delete_end == pt->content_len)  {
+  
+  //if (!isBoundsValid_i(pt, delete_end) || delete_end == pt->content_len)  {
+  if (!isBoundsValid_i(pt, delete_end) )  {
     // This ensures the end point of the delete is valid
     fprintf(stderr, "Delete fail: calculated delete_end out of bounds\n");
     return; 
