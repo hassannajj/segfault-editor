@@ -127,13 +127,16 @@ static void delete_between_pieces(PieceTable* pt, Piece *prev, Piece *left, int 
   /* Free any deleted pieces between left & right */
   Piece* curr_deleted = left;
   Piece* curr_next = NULL;
+  int deleted_pieces = 1;
+
   while (curr_deleted != right) {
     curr_next = curr_deleted->next;
     free(curr_deleted); 
+    deleted_pieces ++;
     curr_deleted = curr_next;
   }
   free(right);
-  pt->piece_count += (new_left ? 1 : 0) + (new_right ? 1 : 0) - 1;
+  pt->piece_count += (new_left ? 1 : 0) + (new_right ? 1 : 0) - deleted_pieces;
 }
 
 
