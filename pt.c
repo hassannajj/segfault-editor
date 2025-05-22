@@ -6,7 +6,7 @@
 
 int main() {
 
-  char *text = "\n";
+  char *text = "";
 
   PieceTable *pt = pt_init(text, INITIAL_ADD_CAP);
   pt_insert_text(pt, "hello", 0);
@@ -15,7 +15,7 @@ int main() {
 
   pt_print(pt);
 
-  pt_delete_text(pt, 1, 16);
+  pt_delete_text(pt, 0, 16);
 
   char* after = pt_get_content(pt);
   printf("after deleting: \n%s\n", after);

@@ -202,6 +202,12 @@ bool isBoundsValid_i(PieceTable *pt, int i) {
 /* Initializes the values for the piece table */
 PieceTable * pt_init(char *text, int add_cap) {
   size_t text_len = strlen(text);
+  if (text_len == 0) {
+    // No text
+    text = "\n";
+    text_len = 1;
+  }
+    
 
   PieceTable *pt = safe_malloc(sizeof(PieceTable));
   pt->original = safe_malloc(text_len + 1);  
