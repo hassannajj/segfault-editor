@@ -27,6 +27,8 @@ typedef struct {
   int content_len; // Number of chars in the content of pieces
                    
   char *original; // original buffer
+  int original_len;
+
   char *add; // add buffer
   int add_len;
   int add_cap; // Capacity of add buffer size, doubles when full

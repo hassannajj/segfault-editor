@@ -681,6 +681,7 @@ void test_delete_multi_pieces() {
   pt_delete_text(pt, 1, 3);
   result = pt_get_content(pt);
   TEST_ASSERT_EQUAL_STRING_MESSAGE("ae", result, "after deleting across multiple pieces");
+  pt_print(pt);
   TEST_ASSERT_EQUAL_INT(2, pt->piece_count);
   free(result);
 

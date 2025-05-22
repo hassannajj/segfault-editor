@@ -211,8 +211,10 @@ PieceTable * pt_init(char *text, int add_cap) {
 
   PieceTable *pt = safe_malloc(sizeof(PieceTable));
   pt->original = safe_malloc(text_len + 1);  
+  pt->original_len = text_len;
+  pt->original[pt->original_len] = '\0'; // null-terminate origina buffer
 
-  strncpy(pt->original, text, text_len);
+  strncpy(pt->original, text, pt->original_len);
   
   pt->add_cap = add_cap;
   pt->add_len = 0;
@@ -483,12 +485,19 @@ void pt_print(PieceTable *pt) {
   printf("\n--- PIECES ---\n");
   Piece *curr = pt->piece_head;
   int index = 0;
+  char ch;
   while (curr != NULL) {
     const char *type_str = curr->type == Original ? "Original" : "Added";
     printf("Piece %d: [%s | offset=%d | len=%d] -> \n\"", index, type_str, curr->offset, curr->len);
     // Print actual text content of the piece
     for (int i = 0; i < curr->len; i++) {
-      char ch = (curr->type == Original) ? pt->original[curr->offset + i] : pt->add[curr->offset + i];
+      if (curr->type == Original && curr->offset + i < pt->original_len)
+        ch = pt->original[curr->offset + i];
+      else if (curr->type == Added && curr->offset + i < pt->add_len)
+        ch = pt->add[curr->offset + i];
+      else
+        ch = '?';  // Or break, or print a warning
+
       putchar(ch);
     }
     printf("\"\n");
