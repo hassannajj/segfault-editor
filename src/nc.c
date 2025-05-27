@@ -13,7 +13,7 @@ typedef struct {
   int smart_x;
 } Cursor;
 
-void move_left(Cursor *cursor) { 
+void ncurses_move_left(Cursor *cursor) { 
   /* Left most boundary */
   if (cursor->x <= 0) return;
 
@@ -22,7 +22,7 @@ void move_left(Cursor *cursor) {
   move(cursor->y, cursor->x);
 }
 
-void move_right(PieceTable *pt, Cursor *cursor) {
+void ncurses_move_right(PieceTable *pt, Cursor *cursor) {
   /* check condition of right boundary using length of current line  */
   if (cursor->x >= pt_line_width(pt, cursor->y)) return; 
 
@@ -31,7 +31,7 @@ void move_right(PieceTable *pt, Cursor *cursor) {
   move(cursor->y, cursor->x);
 }
 
-void move_up(PieceTable *pt, Cursor *cursor) { 
+void ncurses_move_up(PieceTable *pt, Cursor *cursor) { 
   /* Upper bound check */
   if (cursor->y <= 0) return; 
 
@@ -48,7 +48,7 @@ void move_up(PieceTable *pt, Cursor *cursor) {
   move(cursor->y, cursor->x);
 }
 
-void move_down(PieceTable *pt, Cursor *cursor) {
+void ncurses_move_down(PieceTable *pt, Cursor *cursor) {
   /* check condition of lower boundary using number of lines */
   if (cursor->y >= pt_num_lines(pt)-1) return;
 
@@ -65,7 +65,7 @@ void move_down(PieceTable *pt, Cursor *cursor) {
   move(cursor->y, cursor->x);
 }
 
-void render_ncurses(PieceTable *pt) {
+void ncurses_render_content(PieceTable *pt) {
   clear();
   int y = 0;
   int x = 0;
@@ -83,6 +83,34 @@ void render_ncurses(PieceTable *pt) {
     }
   }
   mvprintw(15, 0, "pt->content: %s\n", pt_get_content(pt));
+}
+
+
+void ncurses_insert(PieceTable *pt, Cursor *cursor, char c) {
+  // Enter a character into ncurses buffer
+  pt_insert_char_at_YX(pt, c, cursor->y, cursor->x);
+  //mvaddch(cursor->y, cursor->x, c); // y set to 0 for now
+  cursor->x++;
+  cursor->smart_x = cursor->x;
+}
+
+void ncurses_enter(PieceTable *pt, Cursor *cursor) {
+  pt_insert_char_at_YX(pt, '\n', cursor->y, cursor->x);
+  cursor->y++;
+  cursor->x = 0;
+  cursor->smart_x = cursor->x;
+  
+}
+
+void ncurses_delete(PieceTable *pt, Cursor *cursor) {
+  pt_delete_char_at_YX(pt, cursor->y, cursor->x-1);
+  if (cursor->x > 0){
+    cursor->x--;
+    mvdelch(cursor->y, cursor->x);
+  } else if (cursor->y > 0) {
+    cursor->y--;
+  }
+  
 }
 
 static void finish(int sig) {
@@ -146,40 +174,27 @@ int main() {
         run = 0; 
         break;
       case INPUT_DELETE_CHAR:
-        pt_delete_char_at_YX(pt, cursor->y, cursor->x-1);
-        if (cursor->x > 0){
-          cursor->x--;
-          mvdelch(cursor->y, cursor->x);
-        } else if (cursor->y > 0) {
-          cursor->y--;
-        }
+        ncurses_delete(pt, cursor);
         break;
       case INPUT_ENTER_CHAR:
-        pt_insert_char_at_YX(pt, '\n', cursor->y, cursor->x);
-        cursor->y++;
-        cursor->x = 0;
-        cursor->smart_x = cursor->x;
+        ncurses_enter(pt, cursor);
         break;
 
       case INPUT_MOVE_LEFT:
-        move_left(cursor);
+        ncurses_move_left(cursor);
         break;
       case INPUT_MOVE_RIGHT:
-        move_right(pt, cursor);
+        ncurses_move_right(pt, cursor);
         break;
       case INPUT_MOVE_UP:
-        move_up(pt, cursor);
+        ncurses_move_up(pt, cursor);
         break;
       case INPUT_MOVE_DOWN:
-        move_down(pt, cursor);
+        ncurses_move_down(pt, cursor);
         break;
 
       case INPUT_INSERT_CHAR:
-        // Enter a character into ncurses buffer
-        pt_insert_char_at_YX(pt, c, cursor->y, cursor->x);
-        //mvaddch(cursor->y, cursor->x, c); // y set to 0 for now
-        cursor->x++;
-        cursor->smart_x = cursor->x;
+        ncurses_insert(pt, cursor, c);
         break;
       default:
         // Unknown command
@@ -189,8 +204,8 @@ int main() {
     }
 
 
-    /* Renders the text in piece table */
-    render_ncurses(pt);
+    /* Renders the content in piece table */
+    ncurses_render_content(pt);
     mvprintw(12, 0, "cursor y: %d, x: %d\nline_width: %d\nline_len: %d\nnum_lines: %d\nkey: %c, val: %d, \npt->content_len: %d", cursor->y, cursor->x, pt_line_width(pt, cursor->y), pt_line_len(pt, cursor->y), pt_num_lines(pt), c, c, pt->content_len); /* DEBUG */
 
     /* Moves the cursor in the correct location */
