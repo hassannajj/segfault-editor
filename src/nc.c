@@ -146,6 +146,7 @@ int main() {
         run = 0; 
         break;
       case INPUT_DELETE_CHAR:
+        pt_delete_char_at_YX(pt, cursor->y, cursor->x-1);
         if (cursor->x > 0){
           cursor->x--;
           mvdelch(cursor->y, cursor->x);
