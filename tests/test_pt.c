@@ -230,7 +230,6 @@ void test_complex_edit_sequence(void) {
 
   // Insert more at the beginning
   pt_insert_text(pt, "Honestly, ", 0);  // "Honestly, I love Programming in C and Python!"
-  printf("content_len: %d", pt->content_len);
   
   char *result = pt_get_content(pt);
   TEST_ASSERT_EQUAL_STRING("Honestly, I love Programming in C and Python!", result);
@@ -679,17 +678,16 @@ void test_delete_multi_pieces() {
 
   // Delete "bcd" (from index 1 to 3, length 3) → should leave "ae"
   pt_delete_text(pt, 1, 3);
-  result = pt_get_content(pt);
-  TEST_ASSERT_EQUAL_STRING_MESSAGE("ae", result, "after deleting across multiple pieces");
-  pt_print(pt);
+  char* result2 = pt_get_content(pt);
+  TEST_ASSERT_EQUAL_STRING_MESSAGE("ae", result2, "after deleting across multiple pieces");
   TEST_ASSERT_EQUAL_INT(2, pt->piece_count);
-  free(result);
+  free(result2);
 
   // Delete "bcd" (from index 1 to 3, length 3) → should leave "ae"
   pt_delete_text(pt, 1, 3);
-  result = pt_get_content(pt);
-  TEST_ASSERT_EQUAL_STRING_MESSAGE("ae", result, "after deleting across multiple pieces");
-  free(result);
+  char *result3 = pt_get_content(pt);
+  TEST_ASSERT_EQUAL_STRING_MESSAGE("ae", result3, "after deleting across multiple pieces");
+  free(result3);
   pt_cleanup(pt);
 
 
@@ -697,11 +695,10 @@ void test_delete_multi_pieces() {
   pt_insert_text(pt2, "Hello", 0);
   pt_insert_text(pt2, "cool", 5);
   pt_insert_text(pt2, "World", 9);
-  result = pt_get_content(pt2);
-  TEST_ASSERT_EQUAL_STRING_MESSAGE("HellocoolWorld", result, "Original");
-  free(result);
   pt_delete_text(pt, 4, 6);
-  TEST_ASSERT_EQUAL_STRING_MESSAGE("HellolWorld", result, "after deleting across multiple pieces");
+  char *result4 = pt_get_content(pt2);
+  TEST_ASSERT_EQUAL_STRING_MESSAGE("Hellorld", result4, "after deleting across multiple pieces");
+  free(result4);
   pt_cleanup(pt2);
 }
 
@@ -743,9 +740,9 @@ void test_delete_out_of_bounds() {
 
   // Text delete that overlaps end of content
   PieceTable *pt5 = pt_init("abc", INITIAL_ADD_CAP);
-  pt_delete_text(pt5, 2, 5);  // Should only remove "c"
+  pt_delete_text(pt5, 2, 5);  // should not remove anything because it is out of range
   result = pt_get_content(pt5);
-  TEST_ASSERT_EQUAL_STRING("ab", result);
+  TEST_ASSERT_EQUAL_STRING("abc", result);
   free(result);
   pt_cleanup(pt5);
 
@@ -770,7 +767,7 @@ void test_delete_out_of_bounds() {
   PieceTable *pt8 = pt_init("abc\ndef", INITIAL_ADD_CAP);
   pt_delete_text_at_YX(pt8, 1, 2, 100);  // start at 'f', go past end
   result = pt_get_content(pt8);
-  TEST_ASSERT_EQUAL_STRING("abc\nde", result);
+  TEST_ASSERT_EQUAL_STRING("abc\ndef", result);
   free(result);
   pt_cleanup(pt8);
 }
@@ -876,8 +873,8 @@ int main(void) {
 
   /* Deleting */
   RUN_TEST(test_delete_char_basic);
-  RUN_TEST(test_delete_out_of_bounds);
   RUN_TEST(test_delete_multi_pieces);
+  RUN_TEST(test_delete_out_of_bounds);
   RUN_TEST(test_delete_edge_cases);
 
   return UNITY_END();

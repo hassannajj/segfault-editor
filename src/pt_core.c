@@ -81,10 +81,7 @@ static void insert_piece(PieceTable *pt, Piece *curr, Piece *prev, int local_ins
 // Gets the piece where the local delete index starts and manipulates piece table to delete the text
 
 static void delete_between_pieces(PieceTable* pt, Piece *prev, Piece *left, int left_local_index, Piece *right, int right_local_index) {
-  printf("same piece: %d\n", left==right);
-  printf("prev exists: %d\n", prev!=NULL);
   Piece* next = right->next;
-  printf("next exists: %d\n", next!=NULL);
 
   Piece* new_left = NULL;
   Piece* new_right = NULL;
@@ -207,7 +204,7 @@ PieceTable * pt_init(char *text, int add_cap) {
   size_t text_len = strlen(text);
   if (text_len == 0) {
     // No text
-    text = "\n";
+    text = "\0";
     text_len = 1;
   }
     
@@ -413,7 +410,6 @@ void pt_delete_text(PieceTable *pt, int delete_start, int delete_size) {
     fprintf(stderr, "Deletion was unsuccessful\n");
     return;
   }
-  printf("left_local_index: %d  left_piece->len:%d\nright_local_index: %d  right_piece->len:%d\n", left_local_index, left_piece->len, right_local_index, right_piece->len);
 
   delete_between_pieces(pt, prev, left_piece, left_local_index, right_piece, right_local_index);
 
