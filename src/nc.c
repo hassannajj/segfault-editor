@@ -103,12 +103,15 @@ void ncurses_enter(PieceTable *pt, Cursor *cursor) {
 }
 
 void ncurses_delete(PieceTable *pt, Cursor *cursor) {
+  int og_width = pt_line_width(pt, cursor->y);  // Used for if you are deleting a '\n' character and it makes it shift the line up
+
   pt_delete_char_at_YX(pt, cursor->y, cursor->x-1);
   if (cursor->x > 0){
     cursor->x--;
     mvdelch(cursor->y, cursor->x);
   } else if (cursor->y > 0) {
     cursor->y--;
+    cursor->x = pt_line_width(pt, cursor->y) - og_width;
   }
   
 }

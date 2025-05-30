@@ -366,7 +366,7 @@ void pt_delete_text(PieceTable *pt, int delete_start, int delete_size) {
   int delete_end = delete_start + delete_size; // -1 ? 
   
   //if (!isBoundsValid_i(pt, delete_end) || delete_end == pt->content_len)  {
-  if (!isBoundsValid_i(pt, delete_end) )  {
+  if (!isBoundsValid_i(pt, delete_end))  {
     // This ensures the end point of the delete is valid
     fprintf(stderr, "Delete fail: calculated delete_end out of bounds\n");
     return; 
